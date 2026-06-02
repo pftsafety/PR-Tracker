@@ -1,0 +1,15 @@
+// ============================================================
+//  config.js  –  Purchase Requisition Portal
+//  ⚠️  EDIT THIS FILE before deploying to GitHub Pages
+// ============================================================
+
+//  Step 1: Open your Google Apps Script project
+//  Step 2: Click Deploy → New deployment → Web app
+//          - Execute as: Me
+//          - Who has access: Anyone
+//  Step 3: Copy the Web App URL and paste it below
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw5mW0oM7qUmmni16HsA_TQmsXhaf7TTWnUSevmuuhbQCQCT23_n0GvbZeJxQpnQq0Q/exec";
+
+// Example:
+// const GAS_URL = "https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXXXXXXXXXX/exec";
