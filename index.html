@@ -551,13 +551,18 @@ function show(id){
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');}
 
 // ── API ──────────────────────────────────────────────────
+// Uses GET + URL-encoded payload to avoid CORS preflight
+// that blocks POST from GitHub Pages to Google Apps Script.
 async function api(payload){
   if(!GAS_URL||GAS_URL==='YOUR_GAS_WEB_APP_URL_HERE'||GAS_URL===''){
     document.getElementById('cfgBanner').style.display='flex';
     document.getElementById('appWrap').style.marginTop='48px';
-    throw new Error('GAS_URL not configured in config.js');
+    throw new Error('GAS_URL not configured. Edit config.js or the fallback in index.html.');
   }
-  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const encoded = encodeURIComponent(JSON.stringify(payload));
+  const url = GAS_URL + '?payload=' + encoded;
+  const r = await fetch(url, { method:'GET', redirect:'follow' });
+  if(!r.ok) throw new Error('Server error: ' + r.status);
   return r.json();
 }
 
