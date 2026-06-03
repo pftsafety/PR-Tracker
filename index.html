@@ -490,8 +490,12 @@ table.main-tbl td{padding:11px 14px;font-size:13.5px;vertical-align:middle}
 
 <div class="toast-wrap" id="toastWrap"></div>
 
-<script src="config.js"></script>
+<script src="config.js" onerror="console.warn('config.js not loaded')"></script>
 <script>
+// ── GAS URL fallback — works if config.js is missing ───────
+// Either edit config.js OR paste your URL in the line below:
+if (typeof GAS_URL === 'undefined') { var GAS_URL = "https://script.google.com/macros/s/AKfycbw5mW0oM7qUmmni16HsA_TQmsXhaf7TTWnUSevmuuhbQCQCT23_n0GvbZeJxQpnQq0Q/exec"; }
+
 // ── Constants ────────────────────────────────────────────
 const STAGES = [null,
   { label:"PR Created",                         icon:"📄", fields:[] },
@@ -548,7 +552,7 @@ function toggleSB(){document.getElementById('sidebar').classList.toggle('open');
 
 // ── API ──────────────────────────────────────────────────
 async function api(payload){
-  if(!GAS_URL||GAS_URL==='YOUR_GAS_WEB_APP_URL_HERE'){
+  if(!GAS_URL||GAS_URL==='YOUR_GAS_WEB_APP_URL_HERE'||GAS_URL===''){
     document.getElementById('cfgBanner').style.display='flex';
     document.getElementById('appWrap').style.marginTop='48px';
     throw new Error('GAS_URL not configured in config.js');
