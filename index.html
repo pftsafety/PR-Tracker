@@ -860,193 +860,174 @@ function rupee(v){
   const n=Number(String(v||'').replace(/,/g,''));
   return isNaN(n)||!n?'–':'₹'+n.toLocaleString('en-IN');
 }
-
-// ── Shared journey renderer ──────────────────────────────
-function buildJourneyHTML(pr) {
-  const stageColors = ['','#6366f1','#0891b2','#d97706','#7c3aed','#db2777','#dc2626','#059669','#0d9488'];
-  const stageLightBg= ['','#eef2ff','#e0f7fb','#fef3c7','#ede9fe','#fce7f3','#fee2e2','#d1fae5','#ccfbf1'];
-  const completedStages = STAGES.slice(1).filter((_,i) => stageHasData(pr, i+1)).length;
-  const pct = Math.round((completedStages / 8) * 100);
-
-  // ── Top stepper strip ──
-  const stepperDots = STAGES.slice(1).map((s, i) => {
-    const n = i + 1;
-    const done = stageHasData(pr, n);
-    const curr = Number(pr.currentStage) === n && !done;
-    const dotBg   = done ? stageColors[n] : curr ? '#f59e0b' : 'var(--surface)';
-    const dotBor   = done ? stageColors[n] : curr ? '#f59e0b' : 'var(--border)';
-    const dotColor = done || curr ? '#fff' : 'var(--tx3)';
-    const lineColor= done ? stageColors[n] : 'var(--border)';
-    return `
-      <div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative">
-        ${n < 8 ? `<div style="position:absolute;top:14px;left:50%;width:100%;height:2px;background:${lineColor};z-index:0"></div>` : ''}
-        <div style="width:28px;height:28px;border-radius:50%;background:${dotBg};border:2px solid ${dotBor};
-             display:flex;align-items:center;justify-content:center;z-index:1;position:relative;
-             font-size:${done?'12px':'11px'};font-weight:700;color:${dotColor};
-             box-shadow:${curr?'0 0 0 4px rgba(245,158,11,.18)':'none'};
-             flex-shrink:0">
-          ${done ? '✓' : n}
-        </div>
-        <div style="font-size:9.5px;font-weight:600;color:${done?stageColors[n]:curr?'#b45309':'var(--tx3)'};
-             margin-top:5px;text-align:center;line-height:1.2;max-width:56px;letter-spacing:.01em">
-          ${s.label.split(' ').slice(0,2).join(' ')}${s.label.split(' ').length>2?'…':''}
-        </div>
-      </div>`;
-  }).join('');
-
-  // ── Progress bar ──
-  const progressSegs = Array.from({length:8}, (_, i) => {
-    const n = i + 1, done = stageHasData(pr, n), curr = Number(pr.currentStage) === n && !done;
-    return `<div style="flex:1;height:5px;border-radius:3px;
-      background:${done?stageColors[n]:curr?'#f59e0b':'var(--border)'};
-      transition:background .4s ease"></div>`;
-  }).join('');
-
-  // ── Awaiting banner ──
-  const nextStage = Number(pr.currentStage);
-  const nextLabel = nextStage <= 8 ? STAGES[nextStage]?.label : null;
-  const nextBanner = pr.status === 'Closed'
-    ? `<div style="display:flex;align-items:center;gap:10px;background:#d1fae5;border:1px solid #6ee7b7;
-        border-radius:10px;padding:10px 16px;font-size:12.5px;color:#065f46;font-weight:600">
-        <span style="font-size:18px">✅</span> All stages complete — Item received &amp; GRN done
-       </div>`
-    : nextLabel
-      ? `<div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1px solid var(--warn-b);
-          border-radius:10px;padding:10px 16px;font-size:12.5px;color:#92400e">
-          <span style="font-size:16px">⏳</span>
-          <span><strong>Awaiting:</strong> Stage ${nextStage} — ${nextLabel}</span>
-         </div>`
-      : '';
-
-  // ── Stage cards ──
-  const stageCards = STAGES.slice(1).map((s, i) => {
-    const n = i + 1;
-    const done = stageHasData(pr, n);
-    const curr = Number(pr.currentStage) === n && !done;
-    const pending = !done && !curr;
-
-    let metaItems = [];
-    switch(n) {
-      case 1: if(pr.st1Date) metaItems=[['Date entered', pr.st1Date]]; break;
-      case 2:
-        if(pr.st2Date) metaItems.push(['Release date', pr.st2Date]);
-        if(pr.st2Note) metaItems.push(['Released by', pr.st2Note]); break;
-      case 3:
-        if(pr.st3Date) metaItems.push(['Opening date', pr.st3Date]);
-        if(pr.st3Count) metaItems.push(['No. of tenders', pr.st3Count]); break;
-      case 4:
-        if(pr.st4Date) metaItems.push(['Date sent', pr.st4Date]);
-        if(pr.st4Note) metaItems.push(['Note', pr.st4Note]); break;
-      case 5:
-        if(pr.st5Date) metaItems.push(['Date', pr.st5Date]);
-        if(pr.st5Vendor) metaItems.push(['Vendor', pr.st5Vendor]);
-        if(pr.st5Amount) metaItems.push(['Negotiated amt', rupee(pr.st5Amount)]); break;
-      case 6:
-        if(pr.st6Date) metaItems.push(['Sanction date', pr.st6Date]);
-        if(pr.st6Ref) metaItems.push(['SPC reference', pr.st6Ref]); break;
-      case 7:
-        if(pr.st7PoNo) metaItems.push(['PO number', pr.st7PoNo]);
-        if(pr.st7Date) metaItems.push(['PO date', pr.st7Date]);
-        if(pr.st7PoAmt) metaItems.push(['PO amount', rupee(pr.st7PoAmt)]); break;
-      case 8:
-        if(pr.st8GrnNo) metaItems.push(['GRN number', pr.st8GrnNo]);
-        if(pr.st8Date) metaItems.push(['GRN date', pr.st8Date]); break;
-    }
-
-    const cardBg  = done ? '#f0fdf4' : curr ? '#fffbeb' : 'var(--surface)';
-    const cardBor  = done ? 'var(--success-b)' : curr ? 'var(--warn-b)' : 'var(--border)';
-    const numBg   = done ? stageColors[n] : curr ? '#f59e0b' : 'var(--border)';
-    const numCol  = done || curr ? '#fff' : 'var(--tx3)';
-    const labelCol = done ? 'var(--tx)' : curr ? '#92400e' : 'var(--tx3)';
-    const statePill = done
-      ? `<span style="font-size:10px;font-weight:700;background:#dcfce7;color:#166534;padding:2px 9px;border-radius:20px">Done</span>`
-      : curr
-      ? `<span style="font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;padding:2px 9px;border-radius:20px;animation:pulse-pill 2s ease-in-out infinite">In progress</span>`
-      : `<span style="font-size:10px;font-weight:600;background:var(--surface2);color:var(--tx3);padding:2px 9px;border-radius:20px">Pending</span>`;
-
-    const metaHTML = metaItems.length
-      ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px 16px;margin-top:10px;padding-top:10px;border-top:1px solid ${done?'var(--success-b)':curr?'var(--warn-b)':'var(--surface2)'} ">
-          ${metaItems.map(([k,v])=>`
-            <div>
-              <div style="font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);margin-bottom:2px">${k}</div>
-              <div style="font-size:13px;font-weight:600;color:var(--tx)">${v}</div>
-            </div>`).join('')}
-         </div>`
-      : '';
-
-    const pendingMsg = pending
-      ? `<div style="font-size:12px;color:var(--tx3);font-style:italic;margin-top:6px">Not yet reached</div>`
-      : '';
-
-    return `
-      <div style="display:flex;gap:14px;padding:14px 16px;background:${cardBg};border:1.5px solid ${cardBor};
-           border-radius:12px;transition:box-shadow .15s;position:relative;overflow:hidden">
-        ${done?`<div style="position:absolute;top:0;left:0;width:4px;height:100%;background:${stageColors[n]};border-radius:2px 0 0 2px"></div>`:''}
-        <div style="padding-left:${done?'8px':'0'}">
-          <div style="width:32px;height:32px;border-radius:50%;background:${numBg};
-               display:flex;align-items:center;justify-content:center;
-               font-size:${done?'14px':'12px'};font-weight:700;color:${numCol};
-               flex-shrink:0;margin-top:2px">
-            ${done ? '✓' : n}
-          </div>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-            <div>
-              <span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:${stageColors[n]||'var(--tx3)'}">Stage ${n}</span>
-              <div style="font-size:13.5px;font-weight:600;color:${labelCol};margin-top:1px">${s.icon} ${s.label}</div>
-            </div>
-            ${statePill}
-          </div>
-          ${metaHTML}
-          ${pendingMsg}
-        </div>
-      </div>`;
-  }).join('');
-
-  return `
-    <style>
-      @keyframes pulse-pill { 0%,100%{opacity:1} 50%{opacity:.6} }
-    </style>
-
-    <!-- Stepper strip -->
-    <div style="display:flex;gap:0;align-items:flex-start;margin-bottom:20px;padding:0 4px">
-      ${stepperDots}
-    </div>
-
-    <!-- Progress bar + % -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div style="display:flex;gap:3px;flex:1">${progressSegs}</div>
-      <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap">${completedStages}/8 &nbsp;(${pct}%)</div>
-    </div>
-
-    <!-- Awaiting banner -->
-    ${nextBanner ? `<div style="margin-bottom:14px">${nextBanner}</div>` : ''}
-
-    <!-- Stage cards -->
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${stageCards}
-    </div>`;
-}
-
-
 function stageHasData(pr,n){
   const m={1:'st1Date',2:'st2Date',3:'st3Date',4:'st4Date',5:'st5Date',6:'st6Date',7:'st7Date',8:'st8Date'};
   return !!(pr[m[n]]);
 }
 function getStageMetaText(pr,n){
   switch(n){
-    case 1: return pr.st1Date?`Entered: ${pr.st1Date}`:'Pending';
-    case 2: return pr.st2Date?`Released: ${pr.st2Date}${pr.st2Note?' · By: '+pr.st2Note:''}`:'Pending';
-    case 3: return pr.st3Date?`Opening Date: ${pr.st3Date}${pr.st3Count?' · '+pr.st3Count+' tenders':''}`:'Pending';
-    case 4: return pr.st4Date?`Sent: ${pr.st4Date}${pr.st4Note?' · '+pr.st4Note:''}`:'Pending';
-    case 5: return pr.st5Date?`Date: ${pr.st5Date}${pr.st5Vendor?' · Vendor: '+pr.st5Vendor:''}`:'Pending';
-    case 6: return pr.st6Date?`Sanctioned: ${pr.st6Date}${pr.st6Ref?' · Ref: '+pr.st6Ref:''}`:'Pending';
-    case 7: return pr.st7Date?`PO: ${pr.st7PoNo||'–'} · Date: ${pr.st7Date}`:'Pending';
-    case 8: return pr.st8Date?`GRN: ${pr.st8GrnNo||'–'} · Date: ${pr.st8Date}`:'Pending';
+    case 1: return pr.st1Date?'Entered: '+pr.st1Date:'Pending';
+    case 2: return pr.st2Date?'Released: '+pr.st2Date+(pr.st2Note?' · By: '+pr.st2Note:''):'Pending';
+    case 3: return pr.st3Date?'Opening Date: '+pr.st3Date+(pr.st3Count?' · '+pr.st3Count+' tenders':''):'Pending';
+    case 4: return pr.st4Date?'Sent: '+pr.st4Date+(pr.st4Note?' · '+pr.st4Note:''):'Pending';
+    case 5: return pr.st5Date?'Date: '+pr.st5Date+(pr.st5Vendor?' · Vendor: '+pr.st5Vendor:''):'Pending';
+    case 6: return pr.st6Date?'Sanctioned: '+pr.st6Date+(pr.st6Ref?' · Ref: '+pr.st6Ref:''):'Pending';
+    case 7: return pr.st7Date?'PO: '+(pr.st7PoNo||'–')+' · Date: '+pr.st7Date:'Pending';
+    case 8: return pr.st8Date?'GRN: '+(pr.st8GrnNo||'–')+' · Date: '+pr.st8Date:'Pending';
     default: return '';
   }
 }
+
+// ── Shared journey renderer ──────────────────────────────
+function buildJourneyHTML(pr) {
+  const SC = ['','#6366f1','#0891b2','#d97706','#7c3aed','#db2777','#dc2626','#16a34a','#0d9488'];
+  const completed = STAGES.slice(1).filter((_,i) => stageHasData(pr, i+1)).length;
+  const pct = Math.round((completed / 8) * 100);
+
+  // ── Top stepper dots ──────────────────────────────────
+  let dots = '';
+  STAGES.slice(1).forEach((s, i) => {
+    const n = i + 1;
+    const done = stageHasData(pr, n);
+    const curr = Number(pr.currentStage) === n && !done;
+    const dotBg    = done ? SC[n] : curr ? '#f59e0b' : 'var(--surface)';
+    const dotBor   = done ? SC[n] : curr ? '#f59e0b' : 'var(--border)';
+    const dotColor = (done || curr) ? '#fff' : 'var(--tx3)';
+    const dotLabel = done ? SC[n] : curr ? '#b45309' : 'var(--tx3)';
+    const lineColor = done ? SC[n] : 'var(--border)';
+    const shortLabel = s.label.split(' ').slice(0,2).join(' ') + (s.label.split(' ').length > 2 ? '…' : '');
+    const glow = curr ? '0 0 0 4px rgba(245,158,11,.18)' : 'none';
+    const connector = n < 8
+      ? '<div style="position:absolute;top:14px;left:50%;width:100%;height:2px;background:' + lineColor + ';z-index:0"></div>'
+      : '';
+    dots += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative">'
+      + connector
+      + '<div style="width:28px;height:28px;border-radius:50%;background:' + dotBg + ';border:2px solid ' + dotBor + ';'
+      + 'display:flex;align-items:center;justify-content:center;z-index:1;position:relative;'
+      + 'font-size:' + (done ? '12px' : '11px') + ';font-weight:700;color:' + dotColor + ';'
+      + 'box-shadow:' + glow + ';flex-shrink:0">'
+      + (done ? '✓' : n)
+      + '</div>'
+      + '<div style="font-size:9.5px;font-weight:600;color:' + dotLabel + ';margin-top:5px;text-align:center;line-height:1.2;max-width:56px">'
+      + shortLabel
+      + '</div></div>';
+  });
+
+  // ── Progress bar segments ─────────────────────────────
+  let segs = '';
+  for (let i = 0; i < 8; i++) {
+    const n = i + 1;
+    const done = stageHasData(pr, n);
+    const curr = Number(pr.currentStage) === n && !done;
+    const bg = done ? SC[n] : curr ? '#f59e0b' : 'var(--border)';
+    segs += '<div style="flex:1;height:5px;border-radius:3px;background:' + bg + ';transition:background .4s ease"></div>';
+  }
+
+  // ── Awaiting / complete banner ────────────────────────
+  let banner = '';
+  const nextN = Number(pr.currentStage);
+  const nextLabel = nextN <= 8 ? (STAGES[nextN] || {}).label : null;
+  if (pr.status === 'Closed') {
+    banner = '<div style="display:flex;align-items:center;gap:10px;background:var(--success-l);border:1px solid var(--success-b);border-radius:10px;padding:10px 16px;font-size:12.5px;color:#065f46;font-weight:600">'
+           + '<span style="font-size:18px">✅</span> All stages complete — Item received &amp; GRN done</div>';
+  } else if (nextLabel) {
+    banner = '<div style="display:flex;align-items:center;gap:10px;background:var(--warn-l);border:1px solid var(--warn-b);border-radius:10px;padding:10px 16px;font-size:12.5px;color:#92400e">'
+           + '<span style="font-size:16px">⏳</span>'
+           + '<span><strong>Awaiting:</strong> Stage ' + nextN + ' — ' + nextLabel + '</span></div>';
+  }
+
+  // ── Stage cards ───────────────────────────────────────
+  let cards = '';
+  STAGES.slice(1).forEach((s, i) => {
+    const n = i + 1;
+    const done = stageHasData(pr, n);
+    const curr = Number(pr.currentStage) === n && !done;
+    const pending = !done && !curr;
+
+    // collect meta key-value pairs
+    const meta = [];
+    switch(n) {
+      case 1: if(pr.st1Date) meta.push(['Date entered', pr.st1Date]); break;
+      case 2:
+        if(pr.st2Date) meta.push(['Release date', pr.st2Date]);
+        if(pr.st2Note) meta.push(['Released by', pr.st2Note]); break;
+      case 3:
+        if(pr.st3Date) meta.push(['Opening date', pr.st3Date]);
+        if(pr.st3Count) meta.push(['No. of tenders', pr.st3Count]); break;
+      case 4:
+        if(pr.st4Date) meta.push(['Date sent', pr.st4Date]);
+        if(pr.st4Note) meta.push(['Note', pr.st4Note]); break;
+      case 5:
+        if(pr.st5Date) meta.push(['Date', pr.st5Date]);
+        if(pr.st5Vendor) meta.push(['Vendor', pr.st5Vendor]);
+        if(pr.st5Amount) meta.push(['Negotiated amt', rupee(pr.st5Amount)]); break;
+      case 6:
+        if(pr.st6Date) meta.push(['Sanction date', pr.st6Date]);
+        if(pr.st6Ref) meta.push(['SPC reference', pr.st6Ref]); break;
+      case 7:
+        if(pr.st7PoNo) meta.push(['PO number', pr.st7PoNo]);
+        if(pr.st7Date) meta.push(['PO date', pr.st7Date]);
+        if(pr.st7PoAmt) meta.push(['PO amount', rupee(pr.st7PoAmt)]); break;
+      case 8:
+        if(pr.st8GrnNo) meta.push(['GRN number', pr.st8GrnNo]);
+        if(pr.st8Date) meta.push(['GRN date', pr.st8Date]); break;
+    }
+
+    const cardBg  = done ? '#f0fdf4' : curr ? '#fffbeb' : 'var(--surface)';
+    const cardBor = done ? '#bbf7d0' : curr ? '#fde68a' : 'var(--border)';
+    const numBg   = done ? SC[n] : curr ? '#f59e0b' : 'var(--surface2)';
+    const numCol  = (done || curr) ? '#fff' : 'var(--tx3)';
+    const numBor  = done ? SC[n] : curr ? '#f59e0b' : 'var(--border2)';
+    const lblCol  = done ? 'var(--tx)' : curr ? '#92400e' : 'var(--tx3)';
+    const stripe  = done ? '<div style="position:absolute;top:0;left:0;width:4px;height:100%;background:' + SC[n] + ';border-radius:2px 0 0 2px"></div>' : '';
+
+    let pill = '';
+    if (done)    pill = '<span style="font-size:10px;font-weight:700;background:#dcfce7;color:#166534;padding:2px 9px;border-radius:20px;white-space:nowrap">Done ✓</span>';
+    else if (curr) pill = '<span style="font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;padding:2px 9px;border-radius:20px;white-space:nowrap;animation:pulse-pill 2s infinite">In progress</span>';
+    else           pill = '<span style="font-size:10px;font-weight:600;background:var(--surface2);color:var(--tx3);padding:2px 9px;border-radius:20px;white-space:nowrap">Pending</span>';
+
+    let metaHTML = '';
+    if (meta.length) {
+      metaHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 16px;margin-top:10px;padding-top:10px;border-top:1px solid ' + (done ? '#bbf7d0' : curr ? '#fde68a' : 'var(--border)') + '">';
+      meta.forEach(function(pair) {
+        metaHTML += '<div>'
+          + '<div style="font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);margin-bottom:2px">' + pair[0] + '</div>'
+          + '<div style="font-size:13px;font-weight:600;color:var(--tx)">' + pair[1] + '</div>'
+          + '</div>';
+      });
+      metaHTML += '</div>';
+    } else if (pending) {
+      metaHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic;margin-top:6px">Not yet reached</div>';
+    }
+
+    cards += '<div style="display:flex;gap:14px;padding:14px 16px;background:' + cardBg + ';border:1.5px solid ' + cardBor + ';border-radius:12px;position:relative;overflow:hidden;margin-bottom:8px">'
+      + stripe
+      + '<div style="padding-left:' + (done ? '8px' : '0') + '">'
+      + '<div style="width:32px;height:32px;border-radius:50%;background:' + numBg + ';border:1.5px solid ' + numBor + ';display:flex;align-items:center;justify-content:center;font-size:' + (done ? '14px' : '12px') + ';font-weight:700;color:' + numCol + ';flex-shrink:0;margin-top:2px">'
+      + (done ? '✓' : n)
+      + '</div></div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+      + '<div>'
+      + '<span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:' + SC[n] + '">Stage ' + n + '</span>'
+      + '<div style="font-size:13.5px;font-weight:600;color:' + lblCol + ';margin-top:1px">' + s.icon + ' ' + s.label + '</div>'
+      + '</div>'
+      + pill
+      + '</div>'
+      + metaHTML
+      + '</div></div>';
+  });
+
+  return '<style>@keyframes pulse-pill{0%,100%{opacity:1}50%{opacity:.6}}</style>'
+    + '<div style="display:flex;gap:0;align-items:flex-start;margin-bottom:20px;padding:0 4px">' + dots + '</div>'
+    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+    + '<div style="display:flex;gap:3px;flex:1">' + segs + '</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap">' + completed + '/8 &nbsp;(' + pct + '%)</div>'
+    + '</div>'
+    + (banner ? '<div style="margin-bottom:14px">' + banner + '</div>' : '')
+    + '<div style="display:flex;flex-direction:column">' + cards + '</div>';
+}
+
 
 // ── Departments ──────────────────────────────────────────
 async function loadDepts(){
@@ -1397,6 +1378,10 @@ function showUpdateUI(pr){
     const div=document.createElement('div');
     div.style.cssText='margin-bottom:10px';
     const _sc=['','#6366f1','#0891b2','#d97706','#7c3aed','#db2777','#dc2626','#16a34a','#0d9488'];
+    const _dotBg   = done ? _sc[n] : curr ? '#f59e0b' : 'var(--surface2)';
+    const _dotBor  = done ? _sc[n] : curr ? '#f59e0b' : 'var(--border2)';
+    const _dotCol  = (done||curr) ? '#fff' : 'var(--tx3)';
+    const _dotSize = done ? '16px' : '12px';
     div.innerHTML=`
       <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;
         background:${done?'var(--success-l)':curr?'var(--warn-l)':'var(--surface)'};
@@ -1407,11 +1392,11 @@ function showUpdateUI(pr){
         onmouseenter="if(${!done&&s.fields.length?1:0})this.style.boxShadow='var(--shm)'"
         onmouseleave="this.style.boxShadow='var(--sh)'">
         <div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;
-          background:${done?_sc[${n}]:curr?'#f59e0b':'var(--surface2)'};
-          color:${done||curr?'#fff':'var(--tx3)'};
-          border:1.5px solid ${done?_sc[${n}]:curr?'#f59e0b':'var(--border2)'};
+          background:${_dotBg};
+          color:${_dotCol};
+          border:1.5px solid ${_dotBor};
           display:flex;align-items:center;justify-content:center;
-          font-size:${done?'16px':'12px'};font-weight:800">
+          font-size:${_dotSize};font-weight:800">
           ${done?'✓':n}
         </div>
         <div style="flex:1;min-width:0">
@@ -1427,11 +1412,14 @@ function showUpdateUI(pr){
 }
 
 function buildStageForm(n,s){
-  const flds=s.fields.map(f=>`
-    <div class="fg" style="margin-bottom:10px">
-      <label ${f.req?'class="req"':''}>${f.label}</label>
-      <input type="${f.type||'text'}" id="sf-${n}-${f.id}" placeholder="${f.label}" ${f.type==='number'?'min="0" step="any"':''}>
-    </div>`).join('');
+  const flds=s.fields.map(f=>{
+    const reqCls = f.req ? ' class="req"' : '';
+    const numAttr = f.type==='number' ? ' min="0" step="any"' : '';
+    return `<div class="fg" style="margin-bottom:10px">
+      <label${reqCls}>${f.label}</label>
+      <input type="${f.type||'text'}" id="sf-${n}-${f.id}" placeholder="${f.label}"${numAttr}>
+    </div>`;
+  }).join('');
   return `<div style="padding:4px 0 4px 4px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">${flds}</div>
     <button class="btn btn-success btn-sm" onclick="submitStage(${n})">✓ Mark Stage ${n} Complete</button>
