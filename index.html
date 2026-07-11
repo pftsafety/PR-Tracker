@@ -706,6 +706,19 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
           </div>
         </div>
       </div>
+
+      <div class="card" id="subCard" style="max-width:620px;margin-bottom:18px;display:none">
+        <div class="card-h"><div class="card-t">Add an Update</div></div>
+        <div class="card-b">
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Log a status update or note against the current stage — visible in the procurement journey timeline.</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input type="text" id="subNote" placeholder="e.g. Followed up with vendor, awaiting revised quote" style="flex:1" onkeydown="if(event.key==='Enter')addSubMilestoneUI()">
+            <button class="btn btn-primary btn-sm" onclick="addSubMilestoneUI()">＋ Add</button>
+          </div>
+          <div id="subList"></div>
+        </div>
+      </div>
+
       <div id="stageCards" style="display:none">
         <div class="sec-label" style="margin-bottom:12px">Pipeline Stages — click to update</div>
         <div id="stageList"></div>
@@ -1016,6 +1029,21 @@ function buildJourneyHTML(pr) {
       + '</div>'
       + metaHTML
       + '</div></div>';
+
+    // ── Sub-milestones logged at this stage ──────────────
+    const subsHere = (pr.subMilestones || []).filter(function(sm){ return Number(sm.afterStage) === n; });
+    subsHere.forEach(function(sm){
+      cards += '<div style="display:flex;gap:14px;margin-bottom:8px;padding-left:2px">'
+        + '<div style="width:32px;flex-shrink:0;display:flex;justify-content:center">'
+        + '<div style="width:2px;height:100%;background:' + (done ? SC[n] : 'var(--border)') + ';min-height:20px"></div>'
+        + '</div>'
+        + '<div style="flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-top:-4px">'
+        + '<span style="font-size:12px;flex-shrink:0;margin-top:1px">&#128204;</span>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:12.5px;color:var(--tx2)">' + sm.note + '</div>'
+        + '<div style="font-size:10.5px;color:var(--tx3);margin-top:2px">' + sm.timestamp + '</div>'
+        + '</div></div></div>';
+    });
   });
 
   return '<style>@keyframes pulse-pill{0%,100%{opacity:1}50%{opacity:.6}}</style>'
@@ -1361,7 +1389,13 @@ async function lookupPR(){
     else r=await api({action:'getPRBySAP',sapNo:q});
     if(!r.success) throw new Error(r.message);
     currentPR=r.data; showUpdateUI(r.data);
-  }catch(e){toast(e.message,'error');document.getElementById('stageCards').style.display='none';}
+    document.getElementById('subCard').style.display='block';
+    renderSubList(r.data.subMilestones||[]);
+  }catch(e){
+    toast(e.message,'error');
+    document.getElementById('stageCards').style.display='none';
+    document.getElementById('subCard').style.display='none';
+  }
 }
 
 function showUpdateUI(pr){
@@ -1382,48 +1416,100 @@ function showUpdateUI(pr){
     const _dotBor  = done ? _sc[n] : curr ? '#f59e0b' : 'var(--border2)';
     const _dotCol  = (done||curr) ? '#fff' : 'var(--tx3)';
     const _dotSize = done ? '16px' : '12px';
-    div.innerHTML=`
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;
-        background:${done?'var(--success-l)':curr?'var(--warn-l)':'var(--surface)'};
-        border:1.5px solid ${done?'var(--success-b)':curr?'var(--warn-b)':'var(--border)'};
-        border-radius:var(--rl);cursor:${!done&&s.fields.length?'pointer':'default'};
-        box-shadow:var(--sh);transition:box-shadow .15s"
-        onclick="toggleStageForm(this,${n})"
-        onmouseenter="if(${!done&&s.fields.length?1:0})this.style.boxShadow='var(--shm)'"
-        onmouseleave="this.style.boxShadow='var(--sh)'">
-        <div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;
-          background:${_dotBg};
-          color:${_dotCol};
-          border:1.5px solid ${_dotBor};
-          display:flex;align-items:center;justify-content:center;
-          font-size:${_dotSize};font-weight:800">
-          ${done?'✓':n}
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13.5px;font-weight:600;color:var(--tx);letter-spacing:-.01em">${s.icon} ${s.label}</div>
-          <div style="font-size:12px;color:${done?'var(--success)':curr?'var(--warn)':'var(--tx3)'};margin-top:2px">${getStageMetaText(pr,n)}</div>
-        </div>
-        ${done?'<span style="font-size:10.5px;font-weight:700;background:var(--success-l);color:var(--success);padding:3px 11px;border-radius:20px;border:1px solid var(--success-b);white-space:nowrap">Done ✓</span>':''}
-        ${!done&&s.fields.length?'<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Update ▸</span>':''}
-      </div>
-      ${s.fields.length&&!done?`<div class="stage-update-form" id="suf-${n}">${buildStageForm(n,s)}</div>`:''}\`;    container.appendChild(div);
+    const _cardBg  = done ? 'var(--success-l)' : curr ? 'var(--warn-l)' : 'var(--surface)';
+    const _cardBor = done ? 'var(--success-b)' : curr ? 'var(--warn-b)' : 'var(--border)';
+    const _cursor  = (!done && s.fields.length) ? 'pointer' : 'default';
+    const _metaCol = done ? 'var(--success)' : curr ? 'var(--warn)' : 'var(--tx3)';
+    const _donePill = done ? '<span style="font-size:10.5px;font-weight:700;background:var(--success-l);color:var(--success);padding:3px 11px;border-radius:20px;border:1px solid var(--success-b);white-space:nowrap">Done &#10003;</span>' : '';
+    const _updPill  = (!done && s.fields.length) ? '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Update &#9656;</span>' : '';
+    const _subForm  = (s.fields.length && !done) ? '<div class="stage-update-form" id="suf-'+n+'">'+buildStageForm(n,s)+'</div>' : '';
+    div.innerHTML=''
+      +'<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;'
+      +'background:'+_cardBg+';border:1.5px solid '+_cardBor+';'
+      +'border-radius:var(--rl);cursor:'+_cursor+';box-shadow:var(--sh);transition:box-shadow .15s"'
+      +' onclick="toggleStageForm(this,'+n+')"'
+      +' onmouseenter="if('+( !done&&s.fields.length?1:0)+')this.style.boxShadow=\'var(--shm)\'"'
+      +' onmouseleave="this.style.boxShadow=\'var(--sh)\'">'
+      +'<div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;'
+      +'background:'+_dotBg+';color:'+_dotCol+';border:1.5px solid '+_dotBor+';'
+      +'display:flex;align-items:center;justify-content:center;'
+      +'font-size:'+_dotSize+';font-weight:800">'
+      +(done?'&#10003;':String(n))
+      +'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13.5px;font-weight:600;color:var(--tx);letter-spacing:-.01em">'+s.icon+' '+s.label+'</div>'
+      +'<div style="font-size:12px;color:'+_metaCol+';margin-top:2px">'+getStageMetaText(pr,n)+'</div>'
+      +'</div>'
+      +_donePill+_updPill
+      +'</div>'
+      +_subForm;
+    container.appendChild(div);
   });
   document.getElementById('stageCards').style.display='block';
 }
 
+// ── SUB-MILESTONES UI ─────────────────────────────────────
+function renderSubList(subs){
+  const el = document.getElementById('subList');
+  if (!subs || !subs.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 2px">No updates logged yet.</div>';
+    return;
+  }
+  let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">';
+  subs.slice().reverse().forEach(function(s){
+    html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r)">'
+      + '<div style="width:22px;height:22px;border-radius:6px;background:var(--pri-l);color:var(--pri);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px">&#128204;</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:13px;color:var(--tx)">'+s.note+'</div>'
+      + '<div style="font-size:11px;color:var(--tx3);margin-top:2px">Stage '+s.afterStage+' &#183; '+s.timestamp+'</div>'
+      + '</div>'
+      + '<button class="btn btn-ghost btn-icon" style="padding:4px 7px" onclick="deleteSubMilestoneUI('+s.id+')" title="Remove">&#10005;</button>'
+      + '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function addSubMilestoneUI(){
+  if(!currentPR){toast('Look up a PR first','error');return;}
+  const input = document.getElementById('subNote');
+  const note = input.value.trim();
+  if(!note){toast('Enter an update note','error');return;}
+  try{
+    const r = await api({action:'addSubMilestone', data:{prId: currentPR.id, note: note, afterStage: currentPR.currentStage}});
+    if(!r.success) throw new Error(r.message);
+    toast(r.message,'success');
+    input.value='';
+    const pr2 = await api({action:'getPRById', id: currentPR.id});
+    if(pr2.success){ currentPR = pr2.data; renderSubList(pr2.data.subMilestones||[]); }
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteSubMilestoneUI(id){
+  if(!confirm('Remove this update?')) return;
+  try{
+    const r = await api({action:'deleteSubMilestone', id: id});
+    if(!r.success) throw new Error(r.message);
+    toast(r.message,'success');
+    const pr2 = await api({action:'getPRById', id: currentPR.id});
+    if(pr2.success){ currentPR = pr2.data; renderSubList(pr2.data.subMilestones||[]); }
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 function buildStageForm(n,s){
-  const flds=s.fields.map(f=>{
+  let flds='';
+  s.fields.forEach(function(f){
     const reqCls = f.req ? ' class="req"' : '';
     const numAttr = f.type==='number' ? ' min="0" step="any"' : '';
-    return `<div class="fg" style="margin-bottom:10px">
-      <label${reqCls}>${f.label}</label>
-      <input type="${f.type||'text'}" id="sf-${n}-${f.id}" placeholder="${f.label}"${numAttr}>
-    </div>`;
-  }).join('');
-  return `<div style="padding:4px 0 4px 4px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">${flds}</div>
-    <button class="btn btn-success btn-sm" onclick="submitStage(${n})">✓ Mark Stage ${n} Complete</button>
-  </div>`;
+    flds += '<div class="fg" style="margin-bottom:10px">'
+          + '<label'+reqCls+'>'+f.label+'</label>'
+          + '<input type="'+(f.type||'text')+'" id="sf-'+n+'-'+f.id+'" placeholder="'+f.label+'"'+numAttr+'>'
+          + '</div>';
+  });
+  return '<div style="padding:4px 0 4px 4px">'
+       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+flds+'</div>'
+       + '<button class="btn btn-success btn-sm" onclick="submitStage('+n+')">&#10003; Mark Stage '+n+' Complete</button>'
+       + '</div>';
 }
 function toggleStageForm(el,n){
   const f=document.getElementById('suf-'+n);
