@@ -559,7 +559,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
         <div class="card-h"><div class="card-t">SAP PR Details</div><span style="font-size:12px;color:var(--tx3)">* required</span></div>
         <div class="card-b">
           <div class="sec-label" style="margin-bottom:12px">PR Header</div>
-          <div class="form-grid-4" style="margin-bottom:18px">
+          <div class="form-grid-3" style="margin-bottom:18px">
             <div class="fg">
               <label class="req">PR Number</label>
               <input type="text" id="nSapNo" placeholder="e.g. 1000012345" style="font-family:'JetBrains Mono',monospace">
@@ -567,10 +567,6 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
             <div class="fg">
               <label class="req">PR Date</label>
               <input type="date" id="nSapDate">
-            </div>
-            <div class="fg">
-              <label>Department</label>
-              <select id="nDept"><option value="">Select…</option></select>
             </div>
             <div class="fg">
               <label class="req">PR Type</label>
@@ -584,11 +580,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
             </div>
           </div>
           <div class="form-grid" style="margin-bottom:18px">
-            <div class="fg">
-              <label>Requester Name</label>
-              <input type="text" id="nRequester" placeholder="Name of person raising PR">
-            </div>
-            <div class="fg">
+            <div class="fg fg2">
               <label>Remarks / Justification</label>
               <input type="text" id="nRemarks" placeholder="Purpose / WO reference / project…">
             </div>
@@ -636,8 +628,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
       </div>
       <div class="card">
         <div class="fbar">
-          <input type="text" id="srch" placeholder="🔍  PR No, requester…" oninput="renderTbl()">
-          <select id="dFilter" onchange="renderTbl()"><option value="All">All Departments</option></select>
+          <input type="text" id="srch" placeholder="🔍  PR No…" oninput="renderTbl()">
           <select id="typeFilter" onchange="renderTbl()">
             <option value="All">All Types</option>
             <option value="Revenue">Revenue</option>
@@ -1056,22 +1047,6 @@ function buildJourneyHTML(pr) {
     + '<div style="display:flex;flex-direction:column">' + cards + '</div>';
 }
 
-
-// ── Departments ──────────────────────────────────────────
-async function loadDepts(){
-  try{
-    const r=await api({action:'getDepts'});
-    if(r.success){
-      ['nDept','dFilter'].forEach(id=>{
-        const el=document.getElementById(id); if(!el) return;
-        const isF=(id==='dFilter');
-        el.innerHTML=isF?'<option value="All">All Departments</option>':'<option value="">Select…</option>';
-        r.data.forEach(d=>{const o=document.createElement('option');o.value=o.textContent=d;el.appendChild(o);});
-      });
-    }
-  }catch(e){}
-}
-
 // ── DASHBOARD ────────────────────────────────────────────
 async function loadDash(){
   document.getElementById('dashTs').textContent='Refreshed: '+new Date().toLocaleString('en-IN');
@@ -1149,16 +1124,14 @@ async function loadAll(){
 }
 function renderTbl(){
   const srch=(document.getElementById('srch')?.value||'').toLowerCase();
-  const dept=document.getElementById('dFilter')?.value||'All';
   const type=document.getElementById('typeFilter')?.value||'All';
   const stage=document.getElementById('stFilter')?.value||'All';
   const status=document.getElementById('statusFilter')?.value||'All';
   let rows=allPRs.filter(r=>
-    (dept==='All'||r.department===dept)&&
     (type==='All'||r.prType===type)&&
     (stage==='All'||String(r.currentStage)===stage)&&
     (status==='All'||r.status===status)&&
-    (!srch||r.sapPrNo.toLowerCase().includes(srch)||(r.requester||'').toLowerCase().includes(srch)||String(r.id).includes(srch))
+    (!srch||r.sapPrNo.toLowerCase().includes(srch)||String(r.id).includes(srch))
   );
   document.getElementById('tFoot').textContent=`Showing ${rows.length} of ${allPRs.length} requisition(s)`;
   if(!rows.length){
@@ -1267,9 +1240,7 @@ function getItemsFromForm(){
 // ── SUBMIT NEW PR ────────────────────────────────────────
 async function submitNewPR(){
   const sapNo=document.getElementById('nSapNo').value.trim();
-  const dept =document.getElementById('nDept').value;
   const prType=document.getElementById('nPrType').value;
-  const req  =document.getElementById('nRequester').value.trim();
   if(!sapNo||!prType){toast('Fill all required (*) header fields','error');return;}
   const items=getItemsFromForm();
   if(items===null){toast('Fill item description and quantity for all rows','error');return;}
@@ -1281,8 +1252,7 @@ async function submitNewPR(){
     const r=await api({action:'createPR',data:{
       sapPrNo:sapNo,
       sapPrDate:document.getElementById('nSapDate').value,
-      department:dept,prType,
-      requester:req,
+      prType,
       remarks:document.getElementById('nRemarks').value.trim(),
       items
     }});
@@ -1295,8 +1265,7 @@ async function submitNewPR(){
 }
 
 function clearNewPR(){
-  ['nSapNo','nSapDate','nRequester','nRemarks'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('nDept').value='';
+  ['nSapNo','nSapDate','nRemarks'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('nPrType').value='';
   document.getElementById('itemsBody').innerHTML='';
   document.getElementById('itemsSummary').style.display='none';
@@ -1315,7 +1284,7 @@ async function openDtlById(id){
 
 function openDtl(pr){
   document.getElementById('dtlTitle').textContent=pr.sapPrNo;
-  document.getElementById('dtlSub').innerHTML=`#${pr.id} · ${typeBadge(pr.prType)} · ${statusBadge(pr.status)}${pr.department?' · '+pr.department:''}${pr.requester?' · '+pr.requester:''}`;
+  document.getElementById('dtlSub').innerHTML=`#${pr.id} · ${typeBadge(pr.prType)} · ${statusBadge(pr.status)}`;
 
   // Items table
   const itemsHtml=(pr.items&&pr.items.length)
@@ -1345,14 +1314,12 @@ function openDtl(pr){
         <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px">${pr.sapPrNo}</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <span style="font-size:12px;color:var(--tx3)">📅 ${pr.sapPrDate||'–'}</span>
-          ${pr.department?`<span style="font-size:12px;color:var(--tx3)">🏢 ${pr.department}</span>`:''}
         </div>
       </div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
         <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px">Type &amp; Value</div>
         <div style="margin-bottom:6px">${typeBadge(pr.prType)}</div>
         <div style="font-size:14px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums">${rupee(pr.estValue)||'–'}</div>
-        ${pr.requester?`<div style="font-size:12px;color:var(--tx3);margin-top:4px">👤 ${pr.requester}</div>`:''}
       </div>
     </div>
     ${itemsHtml?`<div class="divider"></div>${itemsHtml}<div class="divider"></div>`:'<div class="divider"></div>'}
@@ -1584,8 +1551,6 @@ async function trackPR(){
               <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
                 ${typeBadge(pr.prType)}
                 <span style="font-size:12px;color:var(--tx3)">${pr.sapPrDate||'–'}</span>
-                ${pr.department?`<span style="font-size:12px;color:var(--tx3)">· ${pr.department}</span>`:''}
-                ${pr.requester?`<span style="font-size:12px;color:var(--tx3)">· ${pr.requester}</span>`:''}
               </div>
             </div>
             <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">
@@ -1624,13 +1589,13 @@ async function trackPR(){
 // ── CSV EXPORT ────────────────────────────────────────────
 function exportCSV(){
   if(!allPRs.length){toast('No data','error');return;}
-  const hdr=['ID','PR No.','PR Date','Department','Requester','PR Type','Remarks','Total Est. Value',
+  const hdr=['ID','PR No.','PR Date','PR Type','Remarks','Total Est. Value',
     'St1 PR Created','St2 Released Date','Released By','St3 Tender Opening Date','No. of Tenders',
     'St4 Comp.Stmt Date','St4 Note','St5 Vendor Sel. Date','Vendor','Negotiated Amt',
     'St6 SPC Date','SPC Ref','St7 PO Date','PO No','PO Amount',
     'St8 GRN Date','GRN No','Current Stage','Status','Last Updated'];
   const rows=allPRs.map(r=>[
-    r.id,r.sapPrNo,r.sapPrDate,r.department,r.requester,r.prType,r.remarks,r.estValue,
+    r.id,r.sapPrNo,r.sapPrDate,r.prType,r.remarks,r.estValue,
     r.st1Date,r.st2Date,r.st2Note,r.st3Date,r.st3Count,
     r.st4Date,r.st4Note,r.st5Date,r.st5Vendor,r.st5Amount,
     r.st6Date,r.st6Ref,r.st7Date,r.st7PoNo,r.st7PoAmt,
@@ -1644,7 +1609,6 @@ function exportCSV(){
 
 // ── REFRESH ───────────────────────────────────────────────
 async function refresh(){
-  await loadDepts();
   const active=document.querySelector('.page.active')?.id?.replace('page-','');
   if(active==='dashboard') await loadDash();
   if(active==='all-prs')   await loadAll();
@@ -1655,7 +1619,6 @@ async function refresh(){
 window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('nSapDate').value=new Date().toISOString().slice(0,10);
   addItemRow(); // start with one blank row
-  await loadDepts();
   await loadDash();
 });
 </script>
