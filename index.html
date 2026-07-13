@@ -6,40 +6,40 @@
 <title>SAP PR Tracker – HLL Lifecare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@600;700;800;900&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ── Design Tokens ─────────────────────────────── */
 :root{
   /* Brand */
-  --pri:#2563eb;--pri-d:#1d4ed8;--pri-l:#eff6ff;--pri-ring:rgba(37,99,235,.18);
+  --pri:#1B6B45;--pri-d:#134F33;--pri-l:#E4F0E9;--pri-ring:rgba(27,107,69,.18);
   /* Neutrals */
-  --bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--surface3:#e2e8f0;
-  --border:#e2e8f0;--border2:#cbd5e1;
+  --bg:#F3F4F1;--surface:#ffffff;--surface2:#ECEEE9;--surface3:#DADDD4;
+  --border:#DADDD4;--border2:#C3C7BB;
   /* Text */
-  --tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;
+  --tx:#1C1F1A;--tx2:#4B5147;--tx3:#838B7D;
   /* Semantic */
-  --success:#16a34a;--success-l:#f0fdf4;--success-b:#bbf7d0;
-  --warn:#d97706;--warn-l:#fffbeb;--warn-b:#fde68a;
-  --danger:#dc2626;--danger-l:#fef2f2;--danger-b:#fecaca;
-  --info:#0891b2;--info-l:#ecfeff;--info-b:#a5f3fc;
+  --success:#1B7A4A;--success-l:#E7F5EC;--success-b:#BFE2CC;
+  --warn:#B8790A;--warn-l:#FBF1E0;--warn-b:#EFCE94;
+  --danger:#9C2B2B;--danger-l:#FBEAE9;--danger-b:#E7B6B3;
+  --info:#1D7A8C;--info-l:#E5F2F5;--info-b:#B7DCE4;
   /* Sidebar */
-  --sb:#0f172a;--sb2:#1e293b;--sb3:#334155;
+  --sb:#1C1F1A;--sb2:#262B24;--sb3:#3A4038;
   /* Stage colours */
-  --s1:#6366f1;--s2:#0891b2;--s3:#d97706;--s4:#7c3aed;
-  --s5:#db2777;--s6:#dc2626;--s7:#16a34a;--s8:#0d9488;
-  /* Radius */
-  --r:8px;--rl:12px;--rx:18px;
-  /* Shadows */
-  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
-  --shm:0 4px 16px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.06);
-  --shl:0 20px 60px rgba(0,0,0,.14),0 8px 20px rgba(0,0,0,.08);
+  --s1:#64748B;--s2:#1D7A8C;--s3:#B8790A;--s4:#6B5CA5;
+  --s5:#A6483A;--s6:#9C2B2B;--s7:#1B7A4A;--s8:#0F6E5C;
+  /* Radius — tighter, more stamped/technical than a bubbly SaaS scale */
+  --r:6px;--rl:9px;--rx:13px;
+  /* Shadows — crisper, suggesting a printed/stamped layer, not a soft glow */
+  --sh:0 1px 2px rgba(20,23,18,.07),0 1px 1px rgba(20,23,18,.05);
+  --shm:0 3px 10px rgba(20,23,18,.09),0 1px 4px rgba(20,23,18,.06);
+  --shl:0 16px 40px rgba(20,23,18,.18),0 6px 16px rgba(20,23,18,.10);
 }
 
 /* ── Reset ──────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{
-  font-family:'Plus Jakarta Sans',sans-serif;
+  font-family:'Public Sans',sans-serif;
   background:var(--bg);color:var(--tx);
   font-size:14px;line-height:1.6;min-height:100vh;
 }
@@ -54,23 +54,23 @@ body{
   position:fixed;top:0;left:0;bottom:0;z-index:100;
   transition:transform .25s cubic-bezier(.4,0,.2,1);
 }
-.sb-head{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-head{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .sb-icon{
-  width:36px;height:36px;border-radius:10px;
+  width:34px;height:34px;border-radius:7px;
   background:var(--pri);
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;flex-shrink:0;
+  flex-shrink:0;
 }
-.sb-org{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:2px}
-.sb-name{font-size:14px;font-weight:700;color:#fff;line-height:1.25}
+.sb-org{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1px}
+.sb-name{font-family:'Big Shoulders',sans-serif;font-size:19px;font-weight:800;color:#fff;line-height:1.05;letter-spacing:-.005em}
 .sb-dept{
-  display:inline-flex;align-items:center;gap:5px;margin-top:10px;
-  background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);
-  font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;
-  border:1px solid rgba(255,255,255,.1);
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.65);
+  font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.12);letter-spacing:.05em;text-transform:uppercase;
 }
-.sb-dept::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0}
+.sb-dept::before{content:'';width:6px;height:6px;border-radius:50%;background:#3FA968;flex-shrink:0}
 
 .nav{flex:1;padding:12px 10px;overflow-y:auto}
 .nav-sec{
@@ -86,21 +86,21 @@ body{
 }
 .nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
 .nav-item.active{
-  background:rgba(37,99,235,.3);color:#fff;
-  border:1px solid rgba(37,99,235,.5);
+  background:rgba(27,107,69,.3);color:#fff;
+  border:1px solid rgba(27,107,69,.5);
 }
 .nav-item.active::before{
   content:'';position:absolute;left:0;top:20%;height:60%;
   width:3px;background:var(--pri);border-radius:0 3px 3px 0;
 }
 .nav-item .ni{
-  width:32px;height:32px;border-radius:7px;
+  width:30px;height:30px;border-radius:6px;
   display:flex;align-items:center;justify-content:center;
-  font-size:15px;flex-shrink:0;
+  flex-shrink:0;
   background:rgba(255,255,255,.06);
   transition:background .15s;
 }
-.nav-item.active .ni{background:rgba(37,99,235,.35)}
+.nav-item.active .ni{background:rgba(27,107,69,.35)}
 .nav-item:hover .ni{background:rgba(255,255,255,.1)}
 
 .sb-foot{
@@ -121,7 +121,7 @@ body{
 }
 .tb-left{display:flex;align-items:center;gap:14px}
 .tb-titleblock{}
-.tb-title{font-size:16px;font-weight:700;color:var(--tx);letter-spacing:-.01em;line-height:1.2}
+.tb-title{font-family:'Big Shoulders',sans-serif;font-size:19px;font-weight:700;color:var(--tx);letter-spacing:0;line-height:1.1}
 .tb-sub{font-size:11.5px;color:var(--tx3);margin-top:1px}
 .hamburger{display:none;border:none;background:none;font-size:21px;cursor:pointer;color:var(--tx2);padding:4px}
 .tb-right{display:flex;gap:8px;align-items:center}
@@ -140,27 +140,27 @@ body{
 
 /* Page header */
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.ph-t{font-size:22px;font-weight:800;color:var(--tx);letter-spacing:-.02em;line-height:1.2}
+.ph-t{font-family:'Big Shoulders',sans-serif;font-size:28px;font-weight:800;color:var(--tx);letter-spacing:-.01em;line-height:1}
 .ph-s{font-size:13px;color:var(--tx3);margin-top:3px}
 
 /* ── Buttons ─────────────────────────────────────── */
 .btn{
   display:inline-flex;align-items:center;gap:6px;
   padding:8px 16px;border-radius:var(--r);
-  font-family:'Plus Jakarta Sans',sans-serif;
+  font-family:'Public Sans',sans-serif;
   font-size:13px;font-weight:600;
   cursor:pointer;border:none;
   transition:all .15s ease;white-space:nowrap;
   letter-spacing:-.01em;
 }
 .btn-primary{background:var(--pri);color:#fff}
-.btn-primary:hover{background:var(--pri-d);box-shadow:0 4px 14px rgba(37,99,235,.4);transform:translateY(-1px)}
+.btn-primary:hover{background:var(--pri-d);box-shadow:0 4px 14px rgba(27,107,69,.4);transform:translateY(-1px)}
 .btn-ghost{background:transparent;color:var(--tx2);border:1.5px solid var(--border2)}
 .btn-ghost:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
 .btn-danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger-b)}
 .btn-danger:hover{background:var(--danger-l)}
 .btn-success{background:var(--success);color:#fff}
-.btn-success:hover{background:#15803d}
+.btn-success:hover{background:#134F33}
 .btn-sm{padding:5px 12px;font-size:12px}
 .btn-icon{padding:8px;aspect-ratio:1;border-radius:var(--r)}
 
@@ -173,25 +173,26 @@ body{
   padding:18px 22px 0;
   display:flex;align-items:center;justify-content:space-between;
 }
-.card-t{font-size:14px;font-weight:700;color:var(--tx);letter-spacing:-.01em}
+.card-t{font-family:'Big Shoulders',sans-serif;font-size:17px;font-weight:700;color:var(--tx);letter-spacing:0}
 .card-b{padding:18px 22px}
 
 /* ── Stat cards ──────────────────────────────────── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
 .sc{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--rl);padding:18px 20px;
+  border-radius:var(--rl);padding:16px 20px 18px;
   position:relative;overflow:hidden;
   transition:transform .15s,box-shadow .15s;cursor:default;
 }
 .sc:hover{transform:translateY(-2px);box-shadow:var(--shm)}
-.sc-stripe{position:absolute;top:0;left:0;width:100%;height:3px}
+.sc-stripe{position:absolute;top:0;left:0;width:100%;height:4px}
 .sc-val{
-  font-size:28px;font-weight:800;color:var(--tx);
-  line-height:1;margin-bottom:5px;letter-spacing:-.03em;
+  font-family:'Big Shoulders',sans-serif;
+  font-size:42px;font-weight:800;color:var(--tx);
+  line-height:.95;margin-bottom:4px;letter-spacing:0;
   font-variant-numeric:tabular-nums;
 }
-.sc-lbl{font-size:11.5px;color:var(--tx3);font-weight:500;letter-spacing:.01em}
+.sc-lbl{font-size:10.5px;color:var(--tx3);font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 
 /* ── Form elements ───────────────────────────────── */
 .fg{display:flex;flex-direction:column;gap:5px}
@@ -206,7 +207,7 @@ label{
 input,select,textarea{
   padding:9px 13px;
   border:1.5px solid var(--border);border-radius:var(--r);
-  font-family:'Plus Jakarta Sans',sans-serif;
+  font-family:'Public Sans',sans-serif;
   font-size:13.5px;color:var(--tx);
   background:var(--surface);outline:none;width:100%;
   transition:border-color .15s,box-shadow .15s;
@@ -227,21 +228,22 @@ textarea{resize:vertical;min-height:68px}
 
 /* ── PR Type badges ──────────────────────────────── */
 .type-badge{
-  display:inline-flex;align-items:center;padding:2px 10px;
-  border-radius:6px;font-size:11.5px;font-weight:700;letter-spacing:.02em;
+  display:inline-flex;align-items:center;padding:2px 8px;
+  border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;
 }
-.type-Revenue{background:#fef3c7;color:#92400e}
-.type-Local{background:#e0f7fb;color:#0e7490}
-.type-Asset{background:#ede9fe;color:#5b21b6}
-.type-Service{background:#d1fae5;color:#065f46}
+.type-Revenue{background:#F3E4C0;color:#7A4B0C}
+.type-Local{background:#E2F0EF;color:#1D6E62}
+.type-Asset{background:#EDE9F5;color:#4A3D77}
+.type-Service{background:#DCEFE2;color:#0F5C39}
 
 /* ── Status & Stage badges ───────────────────────── */
 .badge{
   display:inline-flex;align-items:center;gap:4px;
-  padding:3px 10px;border-radius:20px;
-  font-size:11.5px;font-weight:600;letter-spacing:.01em;
+  padding:3px 9px;border-radius:4px;
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
 }
-.badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .badge-active{color:var(--pri);background:var(--pri-l)}
 .badge-active::before{background:var(--pri)}
 .badge-closed{color:var(--success);background:var(--success-l)}
@@ -250,7 +252,8 @@ textarea{resize:vertical;min-height:68px}
 .badge-on-hold::before{background:var(--warn)}
 .sbadge{
   display:inline-flex;align-items:center;gap:4px;
-  padding:2px 9px;border-radius:6px;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;
 }
 
 /* ── Items table (form) ──────────────────────────── */
@@ -276,7 +279,7 @@ textarea{resize:vertical;min-height:68px}
   background:var(--pri-l);color:var(--pri);
   font-size:12.5px;font-weight:600;cursor:pointer;
   border:1.5px dashed var(--pri);transition:all .15s;
-  font-family:'Plus Jakarta Sans',sans-serif;
+  font-family:'Public Sans',sans-serif;
 }
 .add-item-btn:hover{background:var(--pri);color:#fff}
 .items-summary{
@@ -298,12 +301,12 @@ table.main-tbl thead th{
 }
 table.main-tbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
 table.main-tbl tbody tr:last-child{border-bottom:none}
-table.main-tbl tbody tr:hover{background:#f8faff}
+table.main-tbl tbody tr:hover{background:#F7F8F4}
 table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
 .td-link{
   font-size:13px;font-weight:700;color:var(--pri);cursor:pointer;
   white-space:nowrap;letter-spacing:-.01em;
-  font-family:'JetBrains Mono',monospace;
+  font-family:'IBM Plex Mono',monospace;
 }
 .td-link:hover{text-decoration:underline}
 
@@ -321,7 +324,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
 /* ── Modal ───────────────────────────────────────── */
 .overlay{
   position:fixed;inset:0;
-  background:rgba(15,23,42,.6);
+  background:rgba(20,23,18,.62);
   backdrop-filter:blur(4px);
   -webkit-backdrop-filter:blur(4px);
   z-index:200;display:flex;align-items:center;justify-content:center;
@@ -346,7 +349,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
 }
 .modal-title{
   font-size:19px;font-weight:800;color:var(--tx);
-  letter-spacing:-.02em;font-family:'JetBrains Mono',monospace;
+  letter-spacing:-.02em;font-family:'IBM Plex Mono',monospace;
 }
 .modal-sub{font-size:12.5px;color:var(--tx3);margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .modal-b{padding:22px 26px}
@@ -379,12 +382,12 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
   border-bottom:1px solid var(--border);vertical-align:middle;
 }
 .items-dtl tr:last-child td{border-bottom:none}
-.items-dtl tr:hover td{background:#f8faff}
+.items-dtl tr:hover td{background:#F7F8F4}
 .code-chip{
   display:inline-block;
   background:var(--surface2);color:var(--tx2);
   font-size:11.5px;font-weight:600;padding:2px 8px;
-  border-radius:5px;font-family:'JetBrains Mono',monospace;
+  border-radius:5px;font-family:'IBM Plex Mono',monospace;
   border:1px solid var(--border2);
 }
 
@@ -419,8 +422,8 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
   max-width:320px;border:1px solid var(--sb3);
 }
 .toast.show{transform:translateX(0)}
-.toast.success{background:#052e16;border-color:#166534}
-.toast.error{background:#450a0a;border-color:#991b1b}
+.toast.success{background:#0F2A1B;border-color:#134F33}
+.toast.error{background:#3A1210;border-color:#6B2320}
 
 /* ── Misc helpers ────────────────────────────────── */
 .empty{text-align:center;padding:56px 20px;color:var(--tx3)}
@@ -470,7 +473,13 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
 <aside class="sidebar" id="sidebar">
   <div class="sb-head">
     <div class="sb-brand">
-      <div class="sb-icon">📦</div>
+      <div class="sb-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 18a8 8 0 1 1 16 0"/>
+          <path d="M12 18L16 10"/>
+          <circle cx="12" cy="18" r="1.4" fill="#fff" stroke="none"/>
+        </svg>
+      </div>
       <div>
         <div class="sb-org">HLL Lifecare Ltd</div>
         <div class="sb-name">PR Tracker</div>
@@ -481,20 +490,20 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
   <nav class="nav">
     <div class="nav-sec">Status &amp; Tracking</div>
     <div class="nav-item active" data-page="dashboard" onclick="show('dashboard')">
-      <span class="ni">📊</span> Dashboard
+      <span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 12L16 8"/></svg></span> Dashboard
     </div>
     <div class="nav-item" data-page="track" onclick="show('track')">
-      <span class="ni">🔍</span> Track a PR
+      <span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span> Track a PR
     </div>
     <div class="nav-item" data-page="all-prs" onclick="show('all-prs')">
-      <span class="ni">📋</span> All PRs
+      <span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M7 9h10M7 13h10M7 17h6"/></svg></span> All PRs
     </div>
     <div class="nav-sec">Data Entry</div>
     <div class="nav-item" data-page="new-pr" onclick="show('new-pr')">
-      <span class="ni">➕</span> New PR Entry
+      <span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5V8.5L14 3Z"/><path d="M13.5 3v5a1 1 0 0 0 1 1h5"/><path d="M12 12v6M9 15h6"/></svg></span> New PR Entry
     </div>
     <div class="nav-item" data-page="update" onclick="show('update')">
-      <span class="ni">🔄</span> Update Stage
+      <span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14M10 20V10M16 20V6M22 20V3"/></svg></span> Update Stage
     </div>
   </nav>
   <div class="sb-foot">
@@ -515,9 +524,17 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
       </div>
     </div>
     <div class="tb-right">
-      <button class="btn btn-primary" onclick="show('track')">🔍 Track a PR</button>
-      <button class="btn btn-ghost btn-sm" onclick="show('new-pr')">＋ New PR</button>
-      <button class="btn btn-ghost btn-icon" onclick="refresh()" title="Refresh">↻</button>
+      <button class="btn btn-primary" onclick="show('track')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        Track a PR
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="show('new-pr')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        New PR
+      </button>
+      <button class="btn btn-ghost btn-icon" onclick="refresh()" title="Refresh">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg>
+      </button>
     </div>
   </header>
 
@@ -562,7 +579,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
           <div class="form-grid-3" style="margin-bottom:18px">
             <div class="fg">
               <label class="req">PR Number</label>
-              <input type="text" id="nSapNo" placeholder="e.g. 1000012345" style="font-family:'JetBrains Mono',monospace">
+              <input type="text" id="nSapNo" placeholder="e.g. 1000012345" style="font-family:'IBM Plex Mono',monospace">
             </div>
             <div class="fg">
               <label class="req">PR Date</label>
@@ -681,7 +698,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
           <div class="fg" style="margin-bottom:12px">
             <label>Search by PR Number — or pick from the list below</label>
             <div style="display:flex;gap:8px">
-              <input type="text" id="uSearch" placeholder="Type or select a PR…" list="prDatalistActive" style="flex:1;font-family:'JetBrains Mono',monospace" onkeydown="if(event.key==='Enter')lookupPR()">
+              <input type="text" id="uSearch" placeholder="Type or select a PR…" list="prDatalistActive" style="flex:1;font-family:'IBM Plex Mono',monospace" onkeydown="if(event.key==='Enter')lookupPR()">
               <button class="btn btn-ghost" onclick="lookupPR()">Lookup</button>
             </div>
             <div style="font-size:11.5px;color:var(--tx3);margin-top:5px">💡 Shows active PRs with their item names — click the field to browse</div>
@@ -690,7 +707,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
             <div class="divider" style="margin:10px 0"></div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <div>
-                <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:var(--tx)" id="uPrTitle"></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;color:var(--tx)" id="uPrTitle"></div>
                 <div style="font-size:12px;color:var(--tx3)" id="uPrMeta"></div>
               </div>
               <div id="uPrStatus" style="margin-left:auto"></div>
@@ -729,7 +746,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
             <input type="text" id="trackIn"
               placeholder="PR Number or item name…"
               list="prDatalist"
-              style="flex:1;font-family:'JetBrains Mono',monospace;font-size:14px"
+              style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:14px"
               onkeydown="if(event.key==='Enter')trackPR()">
             <button class="btn btn-primary" onclick="trackPR()">Track</button>
           </div>
@@ -895,7 +912,7 @@ function getStageMetaText(pr,n){
 
 // ── Shared journey renderer ──────────────────────────────
 function buildJourneyHTML(pr) {
-  const SC = ['','#6366f1','#0891b2','#d97706','#7c3aed','#db2777','#dc2626','#16a34a','#0d9488'];
+  const SC = ['','#64748B','#1D7A8C','#B8790A','#6B5CA5','#A6483A','#9C2B2B','#1B7A4A','#0F6E5C'];
   const completed = STAGES.slice(1).filter((_,i) => stageHasData(pr, i+1)).length;
   const pct = Math.round((completed / 8) * 100);
 
@@ -905,25 +922,25 @@ function buildJourneyHTML(pr) {
     const n = i + 1;
     const done = stageHasData(pr, n);
     const curr = Number(pr.currentStage) === n && !done;
-    const dotBg    = done ? SC[n] : curr ? '#f59e0b' : 'var(--surface)';
-    const dotBor   = done ? SC[n] : curr ? '#f59e0b' : 'var(--border)';
+    const dotBg    = done ? SC[n] : curr ? '#D98C12' : 'var(--surface)';
+    const dotBor   = done ? SC[n] : curr ? '#D98C12' : 'var(--border)';
     const dotColor = (done || curr) ? '#fff' : 'var(--tx3)';
-    const dotLabel = done ? SC[n] : curr ? '#b45309' : 'var(--tx3)';
+    const dotLabel = done ? SC[n] : curr ? '#8A5810' : 'var(--tx3)';
     const lineColor = done ? SC[n] : 'var(--border)';
     const shortLabel = s.label.split(' ').slice(0,2).join(' ') + (s.label.split(' ').length > 2 ? '…' : '');
-    const glow = curr ? '0 0 0 4px rgba(245,158,11,.18)' : 'none';
+    const glow = curr ? '0 0 0 4px rgba(217,140,18,.22)' : 'none';
     const connector = n < 8
-      ? '<div style="position:absolute;top:14px;left:50%;width:100%;height:2px;background:' + lineColor + ';z-index:0"></div>'
+      ? '<div style="position:absolute;top:13px;left:50%;width:100%;height:2px;background:' + lineColor + ';z-index:0"></div>'
       : '';
     dots += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative">'
       + connector
-      + '<div style="width:28px;height:28px;border-radius:50%;background:' + dotBg + ';border:2px solid ' + dotBor + ';'
+      + '<div style="width:26px;height:26px;border-radius:6px;background:' + dotBg + ';border:2px solid ' + dotBor + ';'
       + 'display:flex;align-items:center;justify-content:center;z-index:1;position:relative;'
-      + 'font-size:' + (done ? '12px' : '11px') + ';font-weight:700;color:' + dotColor + ';'
+      + 'font-family:\'Big Shoulders\',sans-serif;font-size:' + (done ? '14px' : '13px') + ';font-weight:800;color:' + dotColor + ';'
       + 'box-shadow:' + glow + ';flex-shrink:0">'
-      + (done ? '✓' : n)
+      + (done ? '&#10003;' : n)
       + '</div>'
-      + '<div style="font-size:9.5px;font-weight:600;color:' + dotLabel + ';margin-top:5px;text-align:center;line-height:1.2;max-width:56px">'
+      + '<div style="font-size:9px;font-weight:700;letter-spacing:.02em;color:' + dotLabel + ';margin-top:6px;text-align:center;line-height:1.2;max-width:56px;text-transform:uppercase">'
       + shortLabel
       + '</div></div>';
   });
@@ -934,7 +951,7 @@ function buildJourneyHTML(pr) {
     const n = i + 1;
     const done = stageHasData(pr, n);
     const curr = Number(pr.currentStage) === n && !done;
-    const bg = done ? SC[n] : curr ? '#f59e0b' : 'var(--border)';
+    const bg = done ? SC[n] : curr ? '#D98C12' : 'var(--border)';
     segs += '<div style="flex:1;height:5px;border-radius:3px;background:' + bg + ';transition:background .4s ease"></div>';
   }
 
@@ -943,10 +960,10 @@ function buildJourneyHTML(pr) {
   const nextN = Number(pr.currentStage);
   const nextLabel = nextN <= 8 ? (STAGES[nextN] || {}).label : null;
   if (pr.status === 'Closed') {
-    banner = '<div style="display:flex;align-items:center;gap:10px;background:var(--success-l);border:1px solid var(--success-b);border-radius:10px;padding:10px 16px;font-size:12.5px;color:#065f46;font-weight:600">'
+    banner = '<div style="display:flex;align-items:center;gap:10px;background:var(--success-l);border:1px solid var(--success-b);border-radius:10px;padding:10px 16px;font-size:12.5px;color:#0F5C39;font-weight:600">'
            + '<span style="font-size:18px">✅</span> All stages complete — Item received &amp; GRN done</div>';
   } else if (nextLabel) {
-    banner = '<div style="display:flex;align-items:center;gap:10px;background:var(--warn-l);border:1px solid var(--warn-b);border-radius:10px;padding:10px 16px;font-size:12.5px;color:#92400e">'
+    banner = '<div style="display:flex;align-items:center;gap:10px;background:var(--warn-l);border:1px solid var(--warn-b);border-radius:10px;padding:10px 16px;font-size:12.5px;color:#7A4B0C">'
            + '<span style="font-size:16px">⏳</span>'
            + '<span><strong>Awaiting:</strong> Stage ' + nextN + ' — ' + nextLabel + '</span></div>';
   }
@@ -990,22 +1007,22 @@ function buildJourneyHTML(pr) {
         if(pr.st8Date) meta.push(['GRN date', pr.st8Date]); break;
     }
 
-    const cardBg  = done ? '#f0fdf4' : curr ? '#fffbeb' : 'var(--surface)';
-    const cardBor = done ? '#bbf7d0' : curr ? '#fde68a' : 'var(--border)';
-    const numBg   = done ? SC[n] : curr ? '#f59e0b' : 'var(--surface2)';
+    const cardBg  = done ? '#E7F5EC' : curr ? '#FBF1E0' : 'var(--surface)';
+    const cardBor = done ? '#BFE2CC' : curr ? '#EFCE94' : 'var(--border)';
+    const numBg   = done ? SC[n] : curr ? '#D98C12' : 'var(--surface2)';
     const numCol  = (done || curr) ? '#fff' : 'var(--tx3)';
-    const numBor  = done ? SC[n] : curr ? '#f59e0b' : 'var(--border2)';
-    const lblCol  = done ? 'var(--tx)' : curr ? '#92400e' : 'var(--tx3)';
+    const numBor  = done ? SC[n] : curr ? '#D98C12' : 'var(--border2)';
+    const lblCol  = done ? 'var(--tx)' : curr ? '#7A4B0C' : 'var(--tx3)';
     const stripe  = done ? '<div style="position:absolute;top:0;left:0;width:4px;height:100%;background:' + SC[n] + ';border-radius:2px 0 0 2px"></div>' : '';
 
     let pill = '';
-    if (done)    pill = '<span style="font-size:10px;font-weight:700;background:#dcfce7;color:#166534;padding:2px 9px;border-radius:20px;white-space:nowrap">Done ✓</span>';
-    else if (curr) pill = '<span style="font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;padding:2px 9px;border-radius:20px;white-space:nowrap;animation:pulse-pill 2s infinite">In progress</span>';
-    else           pill = '<span style="font-size:10px;font-weight:600;background:var(--surface2);color:var(--tx3);padding:2px 9px;border-radius:20px;white-space:nowrap">Pending</span>';
+    if (done)    pill = '<span style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#D7EEDF;color:#134F33;padding:3px 8px;border-radius:4px;white-space:nowrap">Done &#10003;</span>';
+    else if (curr) pill = '<span style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#F3E4C0;color:#7A4B0C;padding:3px 8px;border-radius:4px;white-space:nowrap;animation:pulse-pill 2s infinite">In Progress</span>';
+    else           pill = '<span style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--surface2);color:var(--tx3);padding:3px 8px;border-radius:4px;white-space:nowrap">Pending</span>';
 
     let metaHTML = '';
     if (meta.length) {
-      metaHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 16px;margin-top:10px;padding-top:10px;border-top:1px solid ' + (done ? '#bbf7d0' : curr ? '#fde68a' : 'var(--border)') + '">';
+      metaHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 16px;margin-top:10px;padding-top:10px;border-top:1px solid ' + (done ? '#BFE2CC' : curr ? '#EFCE94' : 'var(--border)') + '">';
       meta.forEach(function(pair) {
         metaHTML += '<div>'
           + '<div style="font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);margin-bottom:2px">' + pair[0] + '</div>'
@@ -1017,16 +1034,16 @@ function buildJourneyHTML(pr) {
       metaHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic;margin-top:6px">Not yet reached</div>';
     }
 
-    cards += '<div style="display:flex;gap:14px;padding:14px 16px;background:' + cardBg + ';border:1.5px solid ' + cardBor + ';border-radius:12px;position:relative;overflow:hidden;margin-bottom:8px">'
+    cards += '<div style="display:flex;gap:14px;padding:14px 16px;background:' + cardBg + ';border:1.5px solid ' + cardBor + ';border-radius:10px;position:relative;overflow:hidden;margin-bottom:8px">'
       + stripe
       + '<div style="padding-left:' + (done ? '8px' : '0') + '">'
-      + '<div style="width:32px;height:32px;border-radius:50%;background:' + numBg + ';border:1.5px solid ' + numBor + ';display:flex;align-items:center;justify-content:center;font-size:' + (done ? '14px' : '12px') + ';font-weight:700;color:' + numCol + ';flex-shrink:0;margin-top:2px">'
-      + (done ? '✓' : n)
+      + '<div style="width:30px;height:30px;border-radius:7px;background:' + numBg + ';border:1.5px solid ' + numBor + ';display:flex;align-items:center;justify-content:center;font-family:\'Big Shoulders\',sans-serif;font-size:' + (done ? '16px' : '14px') + ';font-weight:800;color:' + numCol + ';flex-shrink:0;margin-top:2px">'
+      + (done ? '&#10003;' : n)
       + '</div></div>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
       + '<div>'
-      + '<span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:' + SC[n] + '">Stage ' + n + '</span>'
+      + '<span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:' + SC[n] + '">Stage ' + n + '</span>'
       + '<div style="font-size:13.5px;font-weight:600;color:' + lblCol + ';margin-top:1px">' + s.icon + ' ' + s.label + '</div>'
       + '</div>'
       + pill
@@ -1068,21 +1085,21 @@ async function loadDash(){
     if(!r.success) throw new Error(r.message);
     const d=r.data;
     document.getElementById('statsGrid').innerHTML=
-      sc('var(--pri)','📋',d.total,'Total PRs')+
-      sc('var(--pri)','🔄',d.active,'Active')+
-      sc('var(--success)','✅',d.closed,'Completed')+
-      sc('var(--warn)','⏸',d.onHold,'On Hold')+
-      sc('var(--warn-l)'.replace('-l',''),'📝',d.typeCounts?.Revenue||0,'Revenue')+
-      sc('#0891b2','🏭',d.typeCounts?.Asset||0,'Asset')+
-      sc(  '#7c3aed','⚙️',d.typeCounts?.Service||0,'Service')+
-      sc('#059669','📦',d.typeCounts?.Local||0,'Local');
+      sc('var(--pri)',ICO.total,d.total,'Total PRs')+
+      sc('var(--pri)',ICO.active,d.active,'Active')+
+      sc('var(--success)',ICO.done,d.closed,'Completed')+
+      sc('var(--warn)',ICO.hold,d.onHold,'On Hold')+
+      sc('#B8790A',ICO.revenue,d.typeCounts?.Revenue||0,'Revenue')+
+      sc('#1D7A8C',ICO.asset,d.typeCounts?.Asset||0,'Asset')+
+      sc('#6B5CA5',ICO.service,d.typeCounts?.Service||0,'Service')+
+      sc('#1B7A4A',ICO.local,d.typeCounts?.Local||0,'Local');
 
     const labels=['PR Created','Released','Tender Opening','Comp. Stmt','Vendor Sel.','SPC','PO Issued','GRN Done'];
     const sc2=d.stageCounts||[];
     const max=Math.max(...sc2.slice(1),1);
     document.getElementById('stageBreakdown').innerHTML=labels.map((l,i)=>{
       const cnt=sc2[i+1]||0,pct=(cnt/max*100).toFixed(0);
-      const stageC=['','#6366f1','#0891b2','#d97706','#7c3aed','#db2777','#dc2626','#16a34a','#0d9488'];
+      const stageC=['','#64748B','#1D7A8C','#B8790A','#6B5CA5','#A6483A','#9C2B2B','#1B7A4A','#0F6E5C'];
       return `<div class="pt-row">
         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
           <div style="width:20px;height:20px;border-radius:6px;background:${stageC[i+1]}22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1103,7 +1120,7 @@ async function loadDash(){
           onclick='openDtlById(${pr.id})'
           onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background='transparent'">
           <div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--pri);letter-spacing:-.01em">${pr.sapPrNo}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--pri);letter-spacing:-.01em">${pr.sapPrNo}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:3px">${typeBadge(pr.prType)}<span style="font-size:11.5px;color:var(--tx3)">${pr.sapPrDate||''}</span></div>
           </div>
           <div style="display:flex;align-items:center;gap:6px">${stageBadge(pr.currentStage)}</div>
@@ -1118,11 +1135,21 @@ async function loadDash(){
 function sc(color,ico,val,lbl){
   return `<div class="sc">
     <div class="sc-stripe" style="background:${color}"></div>
-    <div style="position:absolute;right:14px;top:14px;font-size:18px;opacity:.13">${ico}</div>
+    <div style="position:absolute;right:14px;top:14px;color:${color};opacity:.16">${ico}</div>
     <div class="sc-val">${val}</div>
     <div class="sc-lbl">${lbl}</div>
   </div>`;
 }
+const ICO = {
+  total:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="13" height="14" rx="1.5"/><path d="M4 4h13v3M4 4v14"/></svg>',
+  active:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>',
+  done:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>',
+  hold:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+  revenue: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+  asset:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l5 3V10l5 3V10l5 3v8H3z"/><path d="M3 21h18"/></svg>',
+  service: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.6 5.1L3 17.5V21h3.5l6-6.1a4 4 0 0 0 5.1-5.6l-2.8 2.8-2-2 2.8-2.8z"/></svg>',
+  local:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>'
+};
 
 // ── ALL PRs TABLE ────────────────────────────────────────
 async function loadAll(){
@@ -1344,7 +1371,7 @@ function openDtl(pr){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
         <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px">PR Reference</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px">${pr.sapPrNo}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px">${pr.sapPrNo}</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <span style="font-size:12px;color:var(--tx3)">📅 ${pr.sapPrDate||'–'}</span>
         </div>
@@ -1352,7 +1379,7 @@ function openDtl(pr){
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
         <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px">Type &amp; Value</div>
         <div style="margin-bottom:6px">${typeBadge(pr.prType)}</div>
-        <div style="font-size:14px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums">${rupee(pr.estValue)||'–'}</div>
+        <div style="font-family:'Big Shoulders',sans-serif;font-size:20px;font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums">${rupee(pr.estValue)||'–'}</div>
       </div>
     </div>
     ${itemsHtml?`<div class="divider"></div>${itemsHtml}<div class="divider"></div>`:'<div class="divider"></div>'}
@@ -1412,20 +1439,20 @@ function showUpdateUI(pr){
     const curr=Number(pr.currentStage)===n;
     const div=document.createElement('div');
     div.style.cssText='margin-bottom:10px';
-    const _sc=['','#6366f1','#0891b2','#d97706','#7c3aed','#db2777','#dc2626','#16a34a','#0d9488'];
-    const _dotBg   = done ? _sc[n] : curr ? '#f59e0b' : 'var(--surface2)';
-    const _dotBor  = done ? _sc[n] : curr ? '#f59e0b' : 'var(--border2)';
+    const _sc=['','#64748B','#1D7A8C','#B8790A','#6B5CA5','#A6483A','#9C2B2B','#1B7A4A','#0F6E5C'];
+    const _dotBg   = done ? _sc[n] : curr ? '#D98C12' : 'var(--surface2)';
+    const _dotBor  = done ? _sc[n] : curr ? '#D98C12' : 'var(--border2)';
     const _dotCol  = (done||curr) ? '#fff' : 'var(--tx3)';
     const _dotSize = done ? '16px' : '12px';
     const _cardBg  = done ? 'var(--success-l)' : curr ? 'var(--warn-l)' : 'var(--surface)';
     const _cardBor = done ? 'var(--success-b)' : curr ? 'var(--warn-b)' : 'var(--border)';
     const _cursor  = !done ? 'pointer' : 'default';
     const _metaCol = done ? 'var(--success)' : curr ? 'var(--warn)' : 'var(--tx3)';
-    const _donePill = done ? '<span style="font-size:10.5px;font-weight:700;background:var(--success-l);color:var(--success);padding:3px 11px;border-radius:20px;border:1px solid var(--success-b);white-space:nowrap">Done &#10003;</span>' : '';
+    const _donePill = done ? '<span style="font-size:10.5px;font-weight:700;background:var(--success-l);color:var(--success);padding:3px 11px;border-radius:4px;border:1px solid var(--success-b);white-space:nowrap">Done &#10003;</span>' : '';
     const _updPill  = !done
       ? (s.fields.length
-          ? '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Update &#9656;</span>'
-          : '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Mark Complete &#10003;</span>')
+          ? '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:4px;border:1px solid var(--border2);white-space:nowrap">Update &#9656;</span>'
+          : '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:4px;border:1px solid var(--border2);white-space:nowrap">Mark Complete &#10003;</span>')
       : '';
     const _subForm  = (s.fields.length && !done) ? '<div class="stage-update-form" id="suf-'+n+'">'+buildStageForm(n,s)+'</div>' : '';
     const _clickFn  = done ? '' : (s.fields.length ? "toggleStageForm(this,"+n+")" : "quickCompleteStage("+n+")");
@@ -1436,10 +1463,10 @@ function showUpdateUI(pr){
       +' onclick="'+_clickFn+'"'
       +' onmouseenter="if('+(!done?1:0)+')this.style.boxShadow=\'var(--shm)\'"'
       +' onmouseleave="this.style.boxShadow=\'var(--sh)\'">'
-      +'<div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;'
+      +'<div style="width:34px;height:34px;border-radius:8px;flex-shrink:0;'
       +'background:'+_dotBg+';color:'+_dotCol+';border:1.5px solid '+_dotBor+';'
       +'display:flex;align-items:center;justify-content:center;'
-      +'font-size:'+_dotSize+';font-weight:800">'
+      +'font-family:\'Big Shoulders\',sans-serif;font-size:'+_dotSize+';font-weight:800">'
       +(done?'&#10003;':String(n))
       +'</div>'
       +'<div style="flex:1;min-width:0">'
@@ -1617,7 +1644,7 @@ async function trackPR(){
         <div style="padding:18px 22px 16px;border-bottom:1px solid var(--border)">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
             <div>
-              <div style="font-family:'Plus Jakarta Sans',sans-serif;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:800;color:var(--tx);letter-spacing:-.02em;letter-spacing:-.02em">${pr.sapPrNo}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--tx);letter-spacing:-.01em">${pr.sapPrNo}</div>
               <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
                 ${typeBadge(pr.prType)}
                 <span style="font-size:12px;color:var(--tx3)">${pr.sapPrDate||'–'}</span>
