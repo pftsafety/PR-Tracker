@@ -628,7 +628,7 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
       </div>
       <div class="card">
         <div class="fbar">
-          <input type="text" id="srch" placeholder="🔍  PR No…" oninput="renderTbl()">
+          <input type="text" id="srch" placeholder="🔍  PR No, item…" list="prDatalist" oninput="renderTbl()">
           <select id="typeFilter" onchange="renderTbl()">
             <option value="All">All Types</option>
             <option value="Revenue">Revenue</option>
@@ -679,11 +679,12 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
       <div class="card" style="max-width:620px;margin-bottom:18px">
         <div class="card-b">
           <div class="fg" style="margin-bottom:12px">
-            <label>Search by PR Number or Internal ID</label>
+            <label>Search by PR Number — or pick from the list below</label>
             <div style="display:flex;gap:8px">
-              <input type="text" id="uSearch" placeholder="e.g. 1000012345" style="flex:1;font-family:'JetBrains Mono',monospace" onkeydown="if(event.key==='Enter')lookupPR()">
+              <input type="text" id="uSearch" placeholder="Type or select a PR…" list="prDatalistActive" style="flex:1;font-family:'JetBrains Mono',monospace" onkeydown="if(event.key==='Enter')lookupPR()">
               <button class="btn btn-ghost" onclick="lookupPR()">Lookup</button>
             </div>
+            <div style="font-size:11.5px;color:var(--tx3);margin-top:5px">💡 Shows active PRs with their item names — click the field to browse</div>
           </div>
           <div id="uFound" style="display:none">
             <div class="divider" style="margin:10px 0"></div>
@@ -722,11 +723,12 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
       <div class="card" style="max-width:560px;margin-bottom:22px">
         <div class="card-b">
           <div style="font-size:12.5px;color:var(--tx3);margin-bottom:12px">
-            💡 Enter the <strong>PR Number</strong> (e.g. 1000012345)
+            💡 Type a <strong>PR Number</strong> or click the field to browse all PRs by item name
           </div>
           <div style="display:flex;gap:8px">
             <input type="text" id="trackIn"
-              placeholder="PR Number"
+              placeholder="PR Number or item name…"
+              list="prDatalist"
               style="flex:1;font-family:'JetBrains Mono',monospace;font-size:14px"
               onkeydown="if(event.key==='Enter')trackPR()">
             <button class="btn btn-primary" onclick="trackPR()">Track</button>
@@ -759,6 +761,9 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
   </div>
 </div>
 
+<datalist id="prDatalist"></datalist>
+<datalist id="prDatalistActive"></datalist>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script src="config.js" onerror="console.warn('config.js not loaded')"></script>
@@ -770,10 +775,10 @@ if (typeof GAS_URL === 'undefined') { var GAS_URL = "https://script.google.com/m
 // ── Constants ────────────────────────────────────────────
 const STAGES = [null,
   { label:"PR Created",                         icon:"📄", fields:[] },
-  { label:"PR Released by Dept Head",           icon:"✅", fields:[
-      {id:"deptHeadName",label:"Dept Head Name",type:"text",req:true},
-      {id:"date",label:"Release Date",type:"date"}]},
+  { label:"PR Released by Dept Head",           icon:"✅", fields:[]},
   { label:"Tender Opening",                     icon:"📋", fields:[
+      {id:"supplierListDate",label:"Supplier List Sent Date",type:"date"},
+      {id:"supplierList",label:"Supplier List / Names",type:"text"},
       {id:"tenderCount",label:"No. of Tenders Received",type:"number"},
       {id:"date",label:"Tender Opening Date",type:"date",req:true}]},
   { label:"Comparative Statement Sent to Dept", icon:"📊", fields:[
@@ -872,7 +877,13 @@ function getStageMetaText(pr,n){
   switch(n){
     case 1: return pr.st1Date?'Entered: '+pr.st1Date:'Pending';
     case 2: return pr.st2Date?'Released: '+pr.st2Date+(pr.st2Note?' · By: '+pr.st2Note:''):'Pending';
-    case 3: return pr.st3Date?'Opening Date: '+pr.st3Date+(pr.st3Count?' · '+pr.st3Count+' tenders':''):'Pending';
+    case 3: {
+      const parts=[];
+      if(pr.st3SupplierDate) parts.push('Supplier list sent: '+pr.st3SupplierDate);
+      if(pr.st3Date) parts.push('Opening: '+pr.st3Date);
+      if(pr.st3Count) parts.push(pr.st3Count+' tenders');
+      return parts.length ? parts.join(' · ') : 'Pending';
+    }
     case 4: return pr.st4Date?'Sent: '+pr.st4Date+(pr.st4Note?' · '+pr.st4Note:''):'Pending';
     case 5: return pr.st5Date?'Date: '+pr.st5Date+(pr.st5Vendor?' · Vendor: '+pr.st5Vendor:''):'Pending';
     case 6: return pr.st6Date?'Sanctioned: '+pr.st6Date+(pr.st6Ref?' · Ref: '+pr.st6Ref:''):'Pending';
@@ -956,6 +967,8 @@ function buildJourneyHTML(pr) {
         if(pr.st2Date) meta.push(['Release date', pr.st2Date]);
         if(pr.st2Note) meta.push(['Released by', pr.st2Note]); break;
       case 3:
+        if(pr.st3SupplierDate) meta.push(['Supplier list sent', pr.st3SupplierDate]);
+        if(pr.st3SupplierList) meta.push(['Suppliers', pr.st3SupplierList]);
         if(pr.st3Date) meta.push(['Opening date', pr.st3Date]);
         if(pr.st3Count) meta.push(['No. of tenders', pr.st3Count]); break;
       case 4:
@@ -1118,10 +1131,30 @@ async function loadAll(){
     const r=await api({action:'getPRs'});
     if(!r.success) throw new Error(r.message);
     allPRs=r.data; renderTbl();
+    populatePRDatalist(allPRs);
   }catch(e){
     document.getElementById('tBody').innerHTML=`<tr><td colspan="9" style="color:var(--red);padding:20px">${e.message}</td></tr>`;
   }
 }
+
+// ── PR autocomplete datalists (shared across search boxes) ─────────
+function escHtml(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function populatePRDatalist(prs){
+  const dlAll    = document.getElementById('prDatalist');
+  const dlActive = document.getElementById('prDatalistActive');
+  if(!dlAll && !dlActive) return;
+  const list = prs || [];
+  const optHtml = function(pr){
+    const items = pr.itemSummary ? pr.itemSummary : 'No items listed';
+    const label = items + '  —  ' + (pr.prType||'—') + ', Stage ' + (pr.currentStage||1);
+    return '<option value="'+escHtml(pr.sapPrNo)+'">'+escHtml(label)+'</option>';
+  };
+  if(dlAll)    dlAll.innerHTML    = list.map(optHtml).join('');
+  if(dlActive) dlActive.innerHTML = list.filter(function(p){return p.status==='Active';}).map(optHtml).join('');
+}
+
 function renderTbl(){
   const srch=(document.getElementById('srch')?.value||'').toLowerCase();
   const type=document.getElementById('typeFilter')?.value||'All';
@@ -1131,7 +1164,7 @@ function renderTbl(){
     (type==='All'||r.prType===type)&&
     (stage==='All'||String(r.currentStage)===stage)&&
     (status==='All'||r.status===status)&&
-    (!srch||r.sapPrNo.toLowerCase().includes(srch)||String(r.id).includes(srch))
+    (!srch||r.sapPrNo.toLowerCase().includes(srch)||String(r.id).includes(srch)||(r.itemSummary||'').toLowerCase().includes(srch))
   );
   document.getElementById('tFoot').textContent=`Showing ${rows.length} of ${allPRs.length} requisition(s)`;
   if(!rows.length){
@@ -1386,17 +1419,22 @@ function showUpdateUI(pr){
     const _dotSize = done ? '16px' : '12px';
     const _cardBg  = done ? 'var(--success-l)' : curr ? 'var(--warn-l)' : 'var(--surface)';
     const _cardBor = done ? 'var(--success-b)' : curr ? 'var(--warn-b)' : 'var(--border)';
-    const _cursor  = (!done && s.fields.length) ? 'pointer' : 'default';
+    const _cursor  = !done ? 'pointer' : 'default';
     const _metaCol = done ? 'var(--success)' : curr ? 'var(--warn)' : 'var(--tx3)';
     const _donePill = done ? '<span style="font-size:10.5px;font-weight:700;background:var(--success-l);color:var(--success);padding:3px 11px;border-radius:20px;border:1px solid var(--success-b);white-space:nowrap">Done &#10003;</span>' : '';
-    const _updPill  = (!done && s.fields.length) ? '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Update &#9656;</span>' : '';
+    const _updPill  = !done
+      ? (s.fields.length
+          ? '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Update &#9656;</span>'
+          : '<span style="font-size:10.5px;font-weight:600;background:var(--pri-l);color:var(--pri);padding:3px 11px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap">Mark Complete &#10003;</span>')
+      : '';
     const _subForm  = (s.fields.length && !done) ? '<div class="stage-update-form" id="suf-'+n+'">'+buildStageForm(n,s)+'</div>' : '';
+    const _clickFn  = done ? '' : (s.fields.length ? "toggleStageForm(this,"+n+")" : "quickCompleteStage("+n+")");
     div.innerHTML=''
       +'<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;'
       +'background:'+_cardBg+';border:1.5px solid '+_cardBor+';'
       +'border-radius:var(--rl);cursor:'+_cursor+';box-shadow:var(--sh);transition:box-shadow .15s"'
-      +' onclick="toggleStageForm(this,'+n+')"'
-      +' onmouseenter="if('+( !done&&s.fields.length?1:0)+')this.style.boxShadow=\'var(--shm)\'"'
+      +' onclick="'+_clickFn+'"'
+      +' onmouseenter="if('+(!done?1:0)+')this.style.boxShadow=\'var(--shm)\'"'
       +' onmouseleave="this.style.boxShadow=\'var(--sh)\'">'
       +'<div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;'
       +'background:'+_dotBg+';color:'+_dotCol+';border:1.5px solid '+_dotBor+';'
@@ -1448,19 +1486,27 @@ async function addSubMilestoneUI(){
     if(!r.success) throw new Error(r.message);
     toast(r.message,'success');
     input.value='';
-    const pr2 = await api({action:'getPRById', id: currentPR.id});
-    if(pr2.success){ currentPR = pr2.data; renderSubList(pr2.data.subMilestones||[]); }
+    if(r.data){
+      currentPR = r.data; renderSubList(r.data.subMilestones||[]);
+    }else{
+      const pr2 = await api({action:'getPRById', id: currentPR.id});
+      if(pr2.success){ currentPR = pr2.data; renderSubList(pr2.data.subMilestones||[]); }
+    }
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 async function deleteSubMilestoneUI(id){
   if(!confirm('Remove this update?')) return;
   try{
-    const r = await api({action:'deleteSubMilestone', id: id});
+    const r = await api({action:'deleteSubMilestone', id: id, prId: currentPR?currentPR.id:null});
     if(!r.success) throw new Error(r.message);
     toast(r.message,'success');
-    const pr2 = await api({action:'getPRById', id: currentPR.id});
-    if(pr2.success){ currentPR = pr2.data; renderSubList(pr2.data.subMilestones||[]); }
+    if(r.data){
+      currentPR = r.data; renderSubList(r.data.subMilestones||[]);
+    }else if(currentPR){
+      const pr2 = await api({action:'getPRById', id: currentPR.id});
+      if(pr2.success){ currentPR = pr2.data; renderSubList(pr2.data.subMilestones||[]); }
+    }
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
@@ -1483,6 +1529,26 @@ function toggleStageForm(el,n){
   const f=document.getElementById('suf-'+n);
   if(f) f.classList.toggle('open');
 }
+
+// For stages with no extra fields to fill in (e.g. Stage 2), a single
+// click marks the stage complete immediately with today's date —
+// no form, no manual date entry.
+async function quickCompleteStage(n){
+  if(!currentPR) return;
+  const label = STAGES[n] ? STAGES[n].label : ('Stage '+n);
+  if(!confirm('Mark Stage '+n+' — "'+label+'" as complete with today\'s date?')) return;
+  try{
+    const r = await api({action:'updateStage', data:{id:currentPR.id, stage:n}});
+    if(!r.success) throw new Error(r.message);
+    toast(r.message,'success');
+    if(r.data){
+      currentPR=r.data; showUpdateUI(r.data);
+    }else{
+      const pr2=await api({action:'getPRById',id:currentPR.id});
+      if(pr2.success){currentPR=pr2.data;showUpdateUI(pr2.data);}
+    }
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
 async function submitStage(n){
   if(!currentPR) return;
   const s=STAGES[n];
@@ -1498,8 +1564,12 @@ async function submitStage(n){
     const r=await api({action:'updateStage',data});
     if(!r.success) throw new Error(r.message);
     toast(r.message,'success');
-    const pr2=await api({action:'getPRById',id:currentPR.id});
-    if(pr2.success){currentPR=pr2.data;showUpdateUI(pr2.data);}
+    if(r.data){
+      currentPR=r.data; showUpdateUI(r.data);
+    }else{
+      const pr2=await api({action:'getPRById',id:currentPR.id});
+      if(pr2.success){currentPR=pr2.data;showUpdateUI(pr2.data);}
+    }
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -1590,13 +1660,14 @@ async function trackPR(){
 function exportCSV(){
   if(!allPRs.length){toast('No data','error');return;}
   const hdr=['ID','PR No.','PR Date','PR Type','Remarks','Total Est. Value',
-    'St1 PR Created','St2 Released Date','Released By','St3 Tender Opening Date','No. of Tenders',
+    'St1 PR Created','St2 Released Date','Released By',
+    'St3 Supplier List Sent Date','Suppliers','St3 Tender Opening Date','No. of Tenders',
     'St4 Comp.Stmt Date','St4 Note','St5 Vendor Sel. Date','Vendor','Negotiated Amt',
     'St6 SPC Date','SPC Ref','St7 PO Date','PO No','PO Amount',
     'St8 GRN Date','GRN No','Current Stage','Status','Last Updated'];
   const rows=allPRs.map(r=>[
     r.id,r.sapPrNo,r.sapPrDate,r.prType,r.remarks,r.estValue,
-    r.st1Date,r.st2Date,r.st2Note,r.st3Date,r.st3Count,
+    r.st1Date,r.st2Date,r.st2Note,r.st3SupplierDate,r.st3SupplierList,r.st3Date,r.st3Count,
     r.st4Date,r.st4Note,r.st5Date,r.st5Vendor,r.st5Amount,
     r.st6Date,r.st6Ref,r.st7Date,r.st7PoNo,r.st7PoAmt,
     r.st8Date,r.st8GrnNo,r.currentStage,r.status,r.lastUpdated
@@ -1611,7 +1682,7 @@ function exportCSV(){
 async function refresh(){
   const active=document.querySelector('.page.active')?.id?.replace('page-','');
   if(active==='dashboard') await loadDash();
-  if(active==='all-prs')   await loadAll();
+  await loadAll(); // always refresh PR list + datalists, regardless of active page
   toast('Refreshed');
 }
 
@@ -1620,6 +1691,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('nSapDate').value=new Date().toISOString().slice(0,10);
   addItemRow(); // start with one blank row
   await loadDash();
+  await loadAll(); // populate PR datalists so Update Stage / Track can autocomplete immediately
 });
 </script>
 </body>
