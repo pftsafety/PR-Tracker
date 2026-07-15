@@ -657,8 +657,8 @@ table.main-tbl td{padding:12px 16px;font-size:13.5px;vertical-align:middle}
             <option value="All">All Stages</option>
             <option value="1">Stage 1 – PR Created</option>
             <option value="2">Stage 2 – PR Released</option>
-            <option value="3">Stage 3 – Tender Opening</option>
-            <option value="4">Stage 4 – Comp. Statement</option>
+            <option value="3">Stage 3 – Comp. Statement</option>
+            <option value="4">Stage 4 – Tender Opening</option>
             <option value="5">Stage 5 – Vendor Selected</option>
             <option value="6">Stage 6 – SPC Sanction</option>
             <option value="7">Stage 7 – PO Issued</option>
@@ -793,14 +793,14 @@ if (typeof GAS_URL === 'undefined') { var GAS_URL = "https://script.google.com/m
 const STAGES = [null,
   { label:"PR Created",                         icon:"📄", fields:[] },
   { label:"PR Released by Dept Head",           icon:"✅", fields:[]},
+  { label:"Comparative Statement Sent to Dept", icon:"📊", fields:[
+      {id:"note",label:"Note / File Reference",type:"text"},
+      {id:"date",label:"Date Sent",type:"date"}]},
   { label:"Tender Opening",                     icon:"📋", fields:[
       {id:"supplierListDate",label:"Supplier List Sent Date",type:"date"},
       {id:"supplierList",label:"Supplier List / Names",type:"text"},
       {id:"tenderCount",label:"No. of Tenders Received",type:"number"},
       {id:"date",label:"Tender Opening Date",type:"date",req:true}]},
-  { label:"Comparative Statement Sent to Dept", icon:"📊", fields:[
-      {id:"note",label:"Note / File Reference",type:"text"},
-      {id:"date",label:"Date Sent",type:"date"}]},
   { label:"Vendor Selected – File to Purchase", icon:"🏭", fields:[
       {id:"vendorName",label:"Selected Vendor Name",type:"text",req:true},
       {id:"negotiatedAmount",label:"Negotiated Amount (₹)",type:"number"},
@@ -827,6 +827,7 @@ const PAGE_META = {
 };
 
 let allPRs=[], currentPR=null, itemRowCount=0;
+let dashLoaded=false, allLoaded=false;
 
 // ── Routing ──────────────────────────────────────────────
 function show(id){
@@ -837,8 +838,10 @@ function show(id){
   document.getElementById('tbTitle').textContent=m.t||id;
   document.getElementById('tbSub').textContent=m.s||'';
   document.getElementById('sidebar').classList.remove('open');
+  // Data is preloaded at app start (and on refresh), so navigating between
+  // pages just re-renders from cache instantly instead of re-fetching.
   if(id==='dashboard') loadDash();
-  if(id==='all-prs')   loadAll();
+  if(id==='all-prs'){ if(allLoaded) renderTbl(); else loadAll(); }
 }
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');}
 
@@ -887,21 +890,21 @@ function rupee(v){
   return isNaN(n)||!n?'–':'₹'+n.toLocaleString('en-IN');
 }
 function stageHasData(pr,n){
-  const m={1:'st1Date',2:'st2Date',3:'st3Date',4:'st4Date',5:'st5Date',6:'st6Date',7:'st7Date',8:'st8Date'};
+  const m={1:'st1Date',2:'st2Date',3:'st4Date',4:'st3Date',5:'st5Date',6:'st6Date',7:'st7Date',8:'st8Date'};
   return !!(pr[m[n]]);
 }
 function getStageMetaText(pr,n){
   switch(n){
     case 1: return pr.st1Date?'Entered: '+pr.st1Date:'Pending';
     case 2: return pr.st2Date?'Released: '+pr.st2Date+(pr.st2Note?' · By: '+pr.st2Note:''):'Pending';
-    case 3: {
+    case 3: return pr.st4Date?'Sent: '+pr.st4Date+(pr.st4Note?' · '+pr.st4Note:''):'Pending';
+    case 4: {
       const parts=[];
       if(pr.st3SupplierDate) parts.push('Supplier list sent: '+pr.st3SupplierDate);
       if(pr.st3Date) parts.push('Opening: '+pr.st3Date);
       if(pr.st3Count) parts.push(pr.st3Count+' tenders');
       return parts.length ? parts.join(' · ') : 'Pending';
     }
-    case 4: return pr.st4Date?'Sent: '+pr.st4Date+(pr.st4Note?' · '+pr.st4Note:''):'Pending';
     case 5: return pr.st5Date?'Date: '+pr.st5Date+(pr.st5Vendor?' · Vendor: '+pr.st5Vendor:''):'Pending';
     case 6: return pr.st6Date?'Sanctioned: '+pr.st6Date+(pr.st6Ref?' · Ref: '+pr.st6Ref:''):'Pending';
     case 7: return pr.st7Date?'PO: '+(pr.st7PoNo||'–')+' · Date: '+pr.st7Date:'Pending';
@@ -984,13 +987,13 @@ function buildJourneyHTML(pr) {
         if(pr.st2Date) meta.push(['Release date', pr.st2Date]);
         if(pr.st2Note) meta.push(['Released by', pr.st2Note]); break;
       case 3:
+        if(pr.st4Date) meta.push(['Date sent', pr.st4Date]);
+        if(pr.st4Note) meta.push(['Note', pr.st4Note]); break;
+      case 4:
         if(pr.st3SupplierDate) meta.push(['Supplier list sent', pr.st3SupplierDate]);
         if(pr.st3SupplierList) meta.push(['Suppliers', pr.st3SupplierList]);
         if(pr.st3Date) meta.push(['Opening date', pr.st3Date]);
         if(pr.st3Count) meta.push(['No. of tenders', pr.st3Count]); break;
-      case 4:
-        if(pr.st4Date) meta.push(['Date sent', pr.st4Date]);
-        if(pr.st4Note) meta.push(['Note', pr.st4Note]); break;
       case 5:
         if(pr.st5Date) meta.push(['Date', pr.st5Date]);
         if(pr.st5Vendor) meta.push(['Vendor', pr.st5Vendor]);
@@ -1078,12 +1081,20 @@ function buildJourneyHTML(pr) {
 }
 
 // ── DASHBOARD ────────────────────────────────────────────
-async function loadDash(){
-  document.getElementById('dashTs').textContent='Refreshed: '+new Date().toLocaleString('en-IN');
+let cachedStats=null;
+async function loadDash(force){
+  if(!force && cachedStats){ renderDash(cachedStats); return; }
   try{
     const r=await api({action:'getStats'});
     if(!r.success) throw new Error(r.message);
-    const d=r.data;
+    cachedStats=r.data; dashLoaded=true;
+    renderDash(r.data);
+  }catch(e){
+    document.getElementById('statsGrid').innerHTML=`<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+function renderDash(d){
+  document.getElementById('dashTs').textContent='Refreshed: '+new Date().toLocaleString('en-IN');
     document.getElementById('statsGrid').innerHTML=
       sc('var(--pri)',ICO.total,d.total,'Total PRs')+
       sc('var(--pri)',ICO.active,d.active,'Active')+
@@ -1094,7 +1105,7 @@ async function loadDash(){
       sc('#6B5CA5',ICO.service,d.typeCounts?.Service||0,'Service')+
       sc('#1B7A4A',ICO.local,d.typeCounts?.Local||0,'Local');
 
-    const labels=['PR Created','Released','Tender Opening','Comp. Stmt','Vendor Sel.','SPC','PO Issued','GRN Done'];
+    const labels=['PR Created','Released','Comp. Stmt','Tender Opening','Vendor Sel.','SPC','PO Issued','GRN Done'];
     const sc2=d.stageCounts||[];
     const max=Math.max(...sc2.slice(1),1);
     document.getElementById('stageBreakdown').innerHTML=labels.map((l,i)=>{
@@ -1115,22 +1126,28 @@ async function loadDash(){
     }).join('');
 
     if(d.recent&&d.recent.length){
-      document.getElementById('recentList').innerHTML=d.recent.map(pr=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:8px;transition:background .12s"
-          onclick='openDtlById(${pr.id})'
-          onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background='transparent'">
-          <div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--pri);letter-spacing:-.01em">${pr.sapPrNo}</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-top:3px">${typeBadge(pr.prType)}<span style="font-size:11.5px;color:var(--tx3)">${pr.sapPrDate||''}</span></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">${stageBadge(pr.currentStage)}</div>
-        </div>`).join('');;
+      document.getElementById('recentList').innerHTML=d.recent.map(pr=>{
+        const stageLabel = (STAGES[pr.currentStage]||{}).label || '';
+        const itemLine = pr.itemSummary
+          ? '<div style="font-size:12px;color:var(--tx2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px">'+escHtml(pr.itemSummary)+'</div>'
+          : '<div style="font-size:12px;color:var(--tx3);font-style:italic;margin-top:2px">No items listed</div>';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:8px;transition:background .12s"'
+          + ' onclick="openDtlById('+pr.id+')"'
+          + ' onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'transparent\'">'
+          + '<div style="min-width:0;flex:1">'
+          + '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:13px;font-weight:700;color:var(--pri);letter-spacing:-.01em">'+pr.sapPrNo+'</div>'
+          + itemLine
+          + '<div style="display:flex;align-items:center;gap:6px;margin-top:4px">'+typeBadge(pr.prType)+'<span style="font-size:11px;color:var(--tx3)">'+(pr.sapPrDate||'')+'</span></div>'
+          + '</div>'
+          + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'
+          + stageBadge(pr.currentStage)
+          + '<span style="font-size:10px;color:var(--tx3);text-align:right;max-width:110px;line-height:1.3">'+stageLabel+'</span>'
+          + '</div>'
+          + '</div>';
+      }).join('');
     }else{
       document.getElementById('recentList').innerHTML='<div class="empty"><div class="ei">📭</div><p>No PRs yet</p></div>';
     }
-  }catch(e){
-    document.getElementById('statsGrid').innerHTML=`<div style="color:var(--red);padding:16px">${e.message}</div>`;
-  }
 }
 function sc(color,ico,val,lbl){
   return `<div class="sc">
@@ -1157,7 +1174,7 @@ async function loadAll(){
   try{
     const r=await api({action:'getPRs'});
     if(!r.success) throw new Error(r.message);
-    allPRs=r.data; renderTbl();
+    allPRs=r.data; allLoaded=true; renderTbl();
     populatePRDatalist(allPRs);
   }catch(e){
     document.getElementById('tBody').innerHTML=`<tr><td colspan="9" style="color:var(--red);padding:20px">${e.message}</td></tr>`;
@@ -1320,6 +1337,8 @@ async function submitNewPR(){
     toast(r.message,'success');
     clearNewPR();
     show('all-prs');
+    await loadAll();      // force-refresh: new PR must appear immediately, not stale cache
+    if(dashLoaded) await loadDash(true); // keep dashboard stats in sync too
   }catch(e){toast('Error: '+e.message,'error');}
   finally{btn.disabled=false;btn.textContent='➕ Add to Tracker';}
 }
@@ -1688,8 +1707,8 @@ function exportCSV(){
   if(!allPRs.length){toast('No data','error');return;}
   const hdr=['ID','PR No.','PR Date','PR Type','Remarks','Total Est. Value',
     'St1 PR Created','St2 Released Date','Released By',
-    'St3 Supplier List Sent Date','Suppliers','St3 Tender Opening Date','No. of Tenders',
-    'St4 Comp.Stmt Date','St4 Note','St5 Vendor Sel. Date','Vendor','Negotiated Amt',
+    'St4 Supplier List Sent Date','Suppliers','St4 Tender Opening Date','No. of Tenders',
+    'St3 Comp.Stmt Date','St3 Note','St5 Vendor Sel. Date','Vendor','Negotiated Amt',
     'St6 SPC Date','SPC Ref','St7 PO Date','PO No','PO Amount',
     'St8 GRN Date','GRN No','Current Stage','Status','Last Updated'];
   const rows=allPRs.map(r=>[
@@ -1707,18 +1726,20 @@ function exportCSV(){
 
 // ── REFRESH ───────────────────────────────────────────────
 async function refresh(){
-  const active=document.querySelector('.page.active')?.id?.replace('page-','');
-  if(active==='dashboard') await loadDash();
-  await loadAll(); // always refresh PR list + datalists, regardless of active page
+  await loadDash(true); // true = force a fresh fetch, bypassing the cache
+  await loadAll();      // always refreshes PR list + datalists
   toast('Refreshed');
 }
 
 // ── INIT ──────────────────────────────────────────────────
+// Preload dashboard stats + full PR list once at startup, so switching
+// between pages afterwards renders instantly from cache instead of
+// waiting on a fresh Apps Script round-trip every single click.
 window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('nSapDate').value=new Date().toISOString().slice(0,10);
   addItemRow(); // start with one blank row
-  await loadDash();
-  await loadAll(); // populate PR datalists so Update Stage / Track can autocomplete immediately
+  await loadDash(true);
+  await loadAll(); // also populates PR datalists for Update Stage / Track
 });
 </script>
 </body>
